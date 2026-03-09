@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Radar - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .upload-zone {
+            border: 2px dashed #e2e8f0;
+            border-radius: var(--radius-lg);
+            padding: 4rem 2rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.5);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(5, 150, 105, 0.05);
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+
+        #preview-container {
+            margin-top: 2rem;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--glass-shadow);
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        #preview-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .result-detail-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid #f1f5f9;
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .result-detail-card:hover {
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .treatment-alert {
+            background: linear-gradient(135deg, #059669 0%, #064e3b 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .treatment-alert::after {
+            content: '\f06a';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            font-size: 8rem;
+            opacity: 0.1;
+        }
+    </style>
+</head>
+
+<body data-farmer-id="{{ current_farmer_id or '' }}">
+
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/crop-recommendation" data-i18n="btn_crops">Smart Advisor</a>
+            <a href="/market-insights" data-i18n="nav_market">Market</a>
+            <a href="/profile"
+                style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center; transition: var(--transition);"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+            <a href="/live-chat" data-i18n="nav_chat">Expert Chat</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 800px;">
+        <header class="hero" style="padding: 4rem 0 2rem;">
+            <div class="hero-badge" data-i18n="dis_hero_badge">
+                <i class="fas fa-camera" style="margin-right: 8px;"></i> AI Vision Diagnostics
+            </div>
+            <h1 style="font-size: 3.5rem;" data-i18n="dis_hero_title">Heal Your Crops.</h1>
+            <p data-i18n="dis_hero_desc">Upload a photo of a leaf to identify diseases and get treatment plans.</p>
+        </header>
+
+        <section class="card" style="padding: 2.5rem; margin-bottom: 4rem;">
+            <div class="upload-zone" id="drop-zone">
+                <i class="fas fa-cloud-arrow-up upload-icon"></i>
+                <h3 style="font-family: 'Outfit'; font-size: 1.5rem; margin-bottom: 0.5rem;"
+                    data-i18n="dis_upload_title">Drop leaf photo here</h3>
+                <p style="color: var(--text-muted);" data-i18n="dis_upload_subtitle">or click to browse</p>
+                <input type="file" id="file-input" accept="image/*" style="display: none;">
+            </div>
+
+            <div id="preview-container">
+                <img id="preview-image" src="" alt="Scan Preview">
+            </div>
+
+            <div id="error-box"
+                style="display: none; margin-top: 2rem; padding: 1.5rem; background: #fef2f2; border: 1px solid #fee2e2; border-radius: var(--radius-md); color: #ef4444; animation: fadeIn 0.4s ease-out;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-circle-exclamation" style="font-size: 1.5rem;"></i>
+                    <div id="error-message-text" style="font-weight: 600;" data-i18n="dis_error_msg"></div>
+                </div>
+            </div>
+
+            <button id="predict-btn" class="btn" style="width: 100%; margin-top: 2rem; display: none;">
+                <i class="fas fa-microscope"></i> <span data-i18n="dis_btn_start">Start AI Analysis</span>
+            </button>
+        </section>
+
+        <div id="result-box" style="display: none; margin-bottom: 6rem; animation: fadeInUp 0.6s ease-out;">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <div id="status-icon" style="font-size: 4rem; margin-bottom: 1.5rem;"></div>
+                <h2 id="result-disease"
+                    style="font-family: 'Outfit'; font-size: 2.5rem; line-height: 1.2; margin-bottom: 0.5rem;"></h2>
+
+                <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <div id="result-confidence-box"
+                        style="padding: 0.5rem 1.5rem; background: #f1f5f9; border-radius: 50px; font-weight: 700; color: var(--primary);">
+                        <span id="result-confidence-val"></span>% <span data-i18n="dis_confidence">Match
+                            Confidence</span>
+                    </div>
+                    <div id="retrieve-status"
+                        style="padding: 0.5rem 1.5rem; border-radius: 50px; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                        <!-- Status Badge -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="health-meter-card" class="card"
+                style="margin-bottom: 2rem; padding: 2rem; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.6); border: 1px solid rgba(5, 150, 105, 0.1);">
+                <div style="text-align: center; max-width: 300px;">
+                    <h4 style="font-family: 'Outfit'; color: var(--text-main); margin-bottom: 1.5rem;"
+                        data-i18n="dis_health_score">Plant Health
+                        Score</h4>
+                    <div style="position: relative; width: 180px; height: 180px; margin: 0 auto;">
+                        <canvas id="healthChart"></canvas>
+                        <div id="affected-pct-val"
+                            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; color: var(--text-main);">
+                            0%</div>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; font-size: 0.85rem; font-weight: 600;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;"><span
+                                style="width: 12px; height: 12px; background: #059669; border-radius: 50%;"></span>
+                            <span data-i18n="dis_healthy">Healthy</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;"><span
+                                style="width: 12px; height: 12px; background: #ef4444; border-radius: 50%;"></span>
+                            <span data-i18n="dis_affected">Affected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid"
+                style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="result-detail-card">
+                    <h4 id="symptoms-header"
+                        style="color: var(--primary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em; margin-bottom: 1rem;"
+                        data-i18n="dis_th_symptoms">
+                        Detected Symptoms</h4>
+                    <p id="symptoms-text" style="font-size: 1rem; color: var(--text-main); font-weight: 500;"></p>
+                </div>
+                <div class="result-detail-card">
+                    <h4 id="cause-header"
+                        style="color: var(--secondary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em; margin-bottom: 1rem;"
+                        data-i18n="dis_th_cause">
+                        Primary Cause</h4>
+                    <p id="cause-text" style="font-size: 1rem; color: var(--text-main); font-weight: 500;"></p>
+                </div>
+                <div class="result-detail-card">
+                    <h4 id="fert-header"
+                        style="color: #8b5cf6; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em; margin-bottom: 1rem;"
+                        data-i18n="dis_recovery_fert">
+                        <i class="fas fa-flask"></i> Recovery Fertilizer
+                    </h4>
+                    <p id="fert-text" style="font-size: 1rem; color: var(--text-main); font-weight: 500;"></p>
+                </div>
+            </div>
+
+            <div class="treatment-alert">
+                <h3
+                    style="font-family: 'Outfit'; color: white; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-kit-medical"></i> <span id="treatment-header" data-i18n="dis_th_treatment">Expert
+                        Recovery Plan</span>
+                </h3>
+                <p id="treatment-text"
+                    style="color: rgba(255,255,255,0.9); font-size: 1.1rem; line-height: 1.7; position: relative; z-index: 1;">
+                    Analyzing treatment steps...
+                </p>
+                <div style="margin-top: 2rem; display: flex; justify-content: center;">
+                    <a id="consult-expert-btn" href="/live-chat" class="btn"
+                        style="background: white; color: var(--primary); font-weight: 800; border: none;">
+                        <i class="fas fa-user-doctor"></i> <span data-i18n="dis_consult_expert">Consult Expert About
+                            This</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scan History Section -->
+        <section id="history-section" style="margin-top: 4rem; padding-bottom: 4rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 style="font-family: 'Outfit'; font-size: 2rem;" data-i18n="dis_history_title">Recent Scans</h2>
+                <button onclick="clearHistory()"
+                    style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9rem;"
+                    data-i18n="dis_history_clear">
+                    <i class="fas fa-trash-can"></i> Clear History
+                </button>
+            </div>
+            <div id="history-container" class="grid"
+                style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.5rem;">
+                <!-- History cards injected here -->
+            </div>
+        </section>
+    </div>
+
+    <a href="/live-chat" class="floating-help-btn">
+        <i class="fas fa-comment-dots"></i>
+        <span data-i18n="btn_ask_help">Ask for Help?</span>
+    </a>
+
+    <footer style="padding: 4rem 0; border-top: 1px solid #f1f5f9; text-align: center;">
+        <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <p data-i18n="footer_text">Where Nature Meets Intelligence.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const predictBtn = document.getElementById('predict-btn');
+        const resultBox = document.getElementById('result-box');
+        let healthChart = null;
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect({ target: fileInput });
+            }
+        });
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    previewImage.src = event.target.result;
+                    previewContainer.style.display = 'block';
+                    predictBtn.style.display = 'flex';
+                    resultBox.style.display = 'none';
+                    document.getElementById('error-box').style.display = 'none';
+                    predictBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        predictBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            // Clear previous states
+            const errorBox = document.getElementById('error-box');
+            const errorMessageText = document.getElementById('error-message-text');
+            errorBox.style.display = 'none';
+            resultBox.style.display = 'none';
+
+            const originalBtnHtml = predictBtn.innerHTML;
+            const loadingKey = 'dis_loading';
+            const loadingText = (window.translations && translations[localStorage.getItem('preferredLanguage') || 'en'][loadingKey]) || 'Processing...';
+
+            predictBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${loadingText}`;
+            predictBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/disease', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(data);
+                    saveToHistory(data);
+                } else {
+                    const errorMsg = data.message || data.error || 'Analysis failed. Please try again.';
+                    errorMessageText.textContent = errorMsg;
+                    errorBox.style.display = 'block';
+                    errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                errorMessageText.textContent = 'Connection lost. Please try again.';
+                errorBox.style.display = 'block';
+            } finally {
+                predictBtn.innerHTML = originalBtnHtml;
+                predictBtn.disabled = false;
+            }
+        });
+
+        // --- History Logic ---
+        function saveToHistory(data) {
+            let history = JSON.parse(localStorage.getItem('diseaseHistory') || "[]");
+            const newEntry = {
+                disease: data.disease,
+                status: data.status,
+                confidence: data.confidence,
+                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+                timestamp: Date.now()
+            };
+
+            // Keep only last 8 scans
+            history.unshift(newEntry);
+            history = history.slice(0, 8);
+            localStorage.setItem('diseaseHistory', JSON.stringify(history));
+            loadHistory();
+        }
+
+        function loadHistory() {
+            const container = document.getElementById('history-container');
+            const history = JSON.parse(localStorage.getItem('diseaseHistory') || "[]");
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+
+            if (history.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 2rem;" data-i18n="dis_history_none">${translations[lang]['dis_history_none'] || 'No previous scans.'}</div>`;
+                return;
+            }
+
+            container.innerHTML = history.map(item => {
+                const diseaseKey = 'res_' + item.disease.toLowerCase().replace(/\s+/g, '_').replace(/__/g, '_');
+                const diseaseDisplay = translations[lang][diseaseKey] || item.disease;
+                return `
+                <div class="card" style="padding: 1.25rem; background: white; border: 1px solid #f1f5f9; text-align: center;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">
+                        ${item.status === 'Healthy' ? '✅' : '⚠️'}
+                    </div>
+                    <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${diseaseDisplay}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">
+                        ${item.date} • ${item.confidence}% ${translations[lang]['dis_confidence'] || 'Match'}
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function clearHistory() {
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const confirmMsg = translations[lang]['dis_history_confirm'] || "Delete all recent scans from this device?";
+            if (confirm(confirmMsg)) {
+                localStorage.removeItem('diseaseHistory');
+                loadHistory();
+            }
+        }
+
+        // Initial load
+        window.addEventListener('load', loadHistory);
+
+        function showResult(data) {
+            resultBox.style.display = 'block';
+            resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const diseaseKey = 'res_' + data.disease.toLowerCase().replace(/\s+/g, '_').replace(/__/g, '_');
+            const diseaseDisplay = translations[lang][diseaseKey] || data.disease;
+            document.getElementById('result-disease').textContent = diseaseDisplay;
+            document.getElementById('result-confidence-val').textContent = data.confidence;
+
+            const icon = document.getElementById('status-icon');
+            const retrieveBadge = document.getElementById('retrieve-status');
+            const affectedValText = document.getElementById('affected-pct-val');
+
+            const isHealthy = data.status === 'Healthy' || diseaseDisplay.toLowerCase().includes('healthy');
+
+            if (isHealthy) {
+                icon.innerHTML = '<i class="fas fa-check-circle" style="color: var(--primary);"></i>';
+                predictBtn.style.display = 'none';
+                if (affectedValText) {
+                    affectedValText.textContent = '100%';
+                    affectedValText.style.color = '#059669';
+                }
+                updateChart(0);
+
+                document.getElementById('symptoms-header').textContent = translations[lang]['dis_care_guide'] || 'Care Guidelines';
+                document.getElementById('cause-header').textContent = translations[lang]['dis_scientific_status'] || 'Scientific Status';
+                document.getElementById('fert-header').innerHTML = `<i class="fas fa-leaf"></i> ${translations[lang]['dis_maint_diet'] || 'Maintenance Diet'}`;
+                document.getElementById('treatment-header').textContent = translations[lang]['dis_care_guide'] || 'Care Guidelines';
+            } else {
+                icon.innerHTML = '<i class="fas fa-triangle-exclamation" style="color: #ef4444;"></i>';
+                predictBtn.style.display = 'flex';
+                if (affectedValText) {
+                    affectedValText.textContent = data.affected_pct + '%';
+                    affectedValText.style.color = '#ef4444';
+                }
+                updateChart(data.affected_pct);
+
+                document.getElementById('symptoms-header').textContent = translations[lang]['dis_th_symptoms'] || 'Detected Symptoms';
+                document.getElementById('cause-header').textContent = translations[lang]['dis_th_cause'] || 'Primary Cause';
+                document.getElementById('fert-header').innerHTML = `<i class="fas fa-flask"></i> ${translations[lang]['dis_recovery_fert'] || 'Recovery Fertilizer'}`;
+                document.getElementById('treatment-header').textContent = translations[lang]['dis_th_treatment'] || 'Expert Recovery Plan';
+            }
+
+            if (data.retrievable) {
+                const label = isHealthy ? (translations[lang]['dis_retrievable'] || 'Yes, Retrievable') : (translations[lang]['dis_not_retrievable'] || 'Severe - Not Retrievable');
+                retrieveBadge.innerHTML = `<i class="fas fa-${isHealthy ? 'heart-pulse' : 'skull-crossbones'}"></i> ${label}`;
+                retrieveBadge.style.background = isHealthy ? 'rgba(5, 150, 105, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+                retrieveBadge.style.color = isHealthy ? 'var(--primary)' : '#ef4444';
+            } else {
+                retrieveBadge.innerHTML = `<i class="fas fa-skull-crossbones"></i> ${translations[lang]['dis_not_retrievable'] || 'Severe - Not Retrievable'}`;
+                retrieveBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+                retrieveBadge.style.color = '#ef4444';
+            }
+
+            document.getElementById('symptoms-text').textContent = data.symptoms;
+            document.getElementById('cause-text').textContent = data.cause;
+            document.getElementById('fert-text').textContent = data.fertilizer;
+            document.getElementById('treatment-text').textContent = data.treatment;
+
+            const expertBtn = document.getElementById('consult-expert-btn');
+            if (expertBtn) {
+                const msg = isHealthy
+                    ? encodeURIComponent(`Hello expert, my plant is healthy! I want to know how to maintain this status.`)
+                    : encodeURIComponent(`Hello expert, my plant has been diagnosed with ${diseaseDisplay}. Can you provide more details on how to treat it?`);
+                expertBtn.href = `/live-chat?msg=${msg}`;
+            }
+        }
+
+        function updateChart(affected) {
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const ctx = document.getElementById('healthChart').getContext('2d');
+            const healthy = 100 - affected;
+
+            if (healthChart) {
+                healthChart.destroy();
+            }
+
+            healthChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        translations[lang]['dis_healthy_tissue'] || 'Healthy Tissue',
+                        translations[lang]['dis_affected_area'] || 'Affected Area'
+                    ],
+                    datasets: [{
+                        data: [healthy, affected],
+                        backgroundColor: ['#059669', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 1500
+                    }
+                }
+            });
+            document.getElementById('affected-pct-val').textContent = Math.round(affected) + '%';
+        }
+    </script>
+
+</body>
+
+</html>

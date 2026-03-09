@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Login - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: calc(100vh - 200px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 450px;
+            padding: 3rem;
+            padding: 3rem;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .auth-header i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .auth-header h2 {
+            font-family: 'Outfit';
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar container">
+        <div class="logo">
+            <i class="fas fa-leaf"></i>
+            <span>Green Eye <span style="font-weight: 300; opacity: 0.6;">AI</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="/register" data-i18n="nav_register_link">Join Us</a>
+            <select id="language-select" onchange="changeLanguage(this.value)"
+                style="padding: 8px 12px; border-radius: 50px; border: 1px solid #e2e8f0; background: white; font-weight: 600; cursor: pointer; outline: none;">
+                <option value="en">🇬🇧 English</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="ml">🌴 മലയാളം</option>
+            </select>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="card auth-card">
+            <div class="auth-header">
+                <i class="fas fa-lock"></i>
+                <h2 data-i18n="log_title">Farmer Login</h2>
+                <p style="color: var(--text-muted); margin-top: 0.5rem;" data-i18n="log_desc">Access your farm
+                    analytics.</p>
+            </div>
+
+            {% if error %}
+            <div
+                style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 1rem; border-radius: 12px; margin-bottom: 2rem; font-size: 0.9rem; font-weight: 600;">
+                <i class="fas fa-exclamation-circle"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            {% if success %}
+            <div
+                style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 1rem; border-radius: 12px; margin-bottom: 2rem; font-size: 0.9rem; font-weight: 600;">
+                <i class="fas fa-check-circle"></i> {{ success }}
+            </div>
+            {% endif %}
+
+            <form action="/login" method="POST">
+                <div class="form-group">
+                    <label class="form-label" for="farmer_id" data-i18n="log_label_id">Farmer ID</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-id-badge"
+                            style="position: absolute; left: 1rem; top: 1.1rem; color: var(--text-muted);"></i>
+                        <input type="text" id="farmer_id" name="farmer_id" class="form-control" placeholder="FE1234..."
+                            style="padding-left: 3rem;" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <label class="form-label" style="margin-bottom: 0;" data-i18n="log_label_pass">Password</label>
+                        <a href="#"
+                            style="font-size: 0.8rem; color: var(--secondary); text-decoration: none; font-weight: 700;"
+                            data-i18n="log_forgot">Forgot?</a>
+                    </div>
+                    <div style="position: relative;">
+                        <i class="fas fa-key"
+                            style="position: absolute; left: 1rem; top: 1.1rem; color: var(--text-muted);"></i>
+                        <input type="password" name="password" class="form-control" placeholder="••••••••"
+                            style="padding-left: 3rem;" required>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <label
+                        style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-muted); cursor: pointer;">
+                        <input type="checkbox"> <span data-i18n="log_remember">Remember me</span>
+                    </label>
+                    <a href="#"
+                        style="font-size: 0.9rem; color: var(--primary); font-weight: 700; text-decoration: none;"
+                        data-i18n="log_forgot">Forgot?</a>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%;" data-i18n="log_btn_submit">
+                    Log In <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.95rem;">
+                <span data-i18n="log_new_farmer">New farmer?</span> <a href="/register"
+                    style="color: var(--primary); font-weight: 700; text-decoration: none;"
+                    data-i18n="log_register_link">Register here</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script>
+        document.querySelector('form').addEventListener('submit', function (e) {
+            let valid = true;
+            const farmerId = document.getElementById('farmer_id');
+            const password = document.querySelector('input[type="password"]');
+
+            // Reset styles
+            [farmerId, password].forEach(el => {
+                el.style.borderColor = '';
+                el.classList.remove('shake');
+            });
+
+            // Farmer ID validation
+            if (farmerId.value.trim().length < 4) {
+                valid = false;
+                farmerId.style.borderColor = '#ef4444';
+                farmerId.classList.add('shake');
+            }
+
+            // Password validation
+            if (password.value.length < 4) {
+                valid = false;
+                password.style.borderColor = '#ef4444';
+                password.classList.add('shake');
+            }
+
+            if (!valid) {
+                e.preventDefault();
+                setTimeout(() => {
+                    [farmerId, password].forEach(el => el.classList.remove('shake'));
+                }, 500);
+            }
+        });
+    </script>
+
+    <footer>
+        <div class="container">
+            <p style="font-size: 0.85rem; opacity: 0.5;">&copy; 2026 Green Eye AI.Where Nature Meets Intelligence.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

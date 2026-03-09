@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Profile - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+
+        .profile-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 3.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            border: 4px solid var(--white);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .profile-name h2 {
+            font-family: 'Outfit';
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-id {
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .info-item {
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            border: 1px solid #f1f5f9;
+        }
+
+        .info-label {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .logout-section {
+            margin-top: 3.5rem;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body data-farmer-id="{{ current_farmer_id or '' }}">
+
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/profile"
+                style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center; transition: var(--transition);"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+            <a href="/logout" style="color: #ef4444;" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="profile-name">
+                    <h2>{{ farmer.name }}</h2>
+                    <div class="profile-id"><span data-i18n="profile_id">Farmer ID</span>: {{ farmer_id }}</div>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label" data-i18n="profile_mobile">Mobile Number</div>
+                    <div class="info-value">{{ farmer.phone }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label" data-i18n="profile_lang">Preferred Language</div>
+                    <div class="info-value" data-i18n="lang_{{ farmer.language }}">
+                        {% if farmer.language == 'en' %} English {% elif farmer.language == 'hi' %} Hindi {% elif
+                        farmer.language == 'ml' %} Malayalam {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label" data-i18n="profile_status">Account Status</div>
+                    <div class="info-value" style="color: var(--primary);"><span
+                            data-i18n="profile_active">Active</span> <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                style="margin-top: 3rem; padding: 2rem; background: #f8fafc; border-radius: var(--radius-lg); border: 1px solid #f1f5f9;">
+                <form action="/update-profile" method="POST">
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label"
+                            style="font-size: 0.85rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;"
+                            data-i18n="profile_crops">My Crops</label>
+                        <input type="text" name="crops" class="form-control"
+                            value="{{ farmer.crops if farmer.crops else '' }}" data-i18n="profile_crops_placeholder"
+                            placeholder="e.g. Wheat, Rice, Tomato" style="height: 3.5rem; background: white;">
+                    </div>
+                    <button type="submit" class="btn btn-outline"
+                        style="width: 100%; border-style: dashed; background: transparent;">
+                        <i class="fas fa-save" style="margin-right: 8px;"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+
+            <div class="logout-section">
+                <a href="/logout" class="btn"
+                    style="background: #ef4444; box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.3);"
+                    data-i18n="btn_logout_account">
+                    Log Out Account
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Advisor - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .wizard-step {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .wizard-step.active {
+            display: block;
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .select-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 1.5rem 0.5rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            user-select: none;
+        }
+
+        .select-card i {
+            font-size: 2.25rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .select-card span {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .select-card:hover {
+            border-color: var(--primary-light);
+        }
+
+        .select-card.active {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.05);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .select-card.active i {
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .wizard-nav {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2.5rem;
+        }
+
+        .step-progress {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: 0.3s;
+        }
+
+        .dot.active {
+            background: var(--primary);
+            width: 24px;
+            border-radius: 5px;
+        }
+
+        .question-title {
+            font-family: 'Outfit';
+            font-size: 1.75rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            color: var(--text-main);
+        }
+
+        .question-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 2.5rem;
+        }
+
+        .result-item {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid #f1f5f9;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .result-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--glass-shadow);
+            border-color: var(--primary-light);
+        }
+
+        .profit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .profit-high {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .profit-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .profit-low {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-box {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            font-family: 'Outfit';
+            color: var(--text-main);
+        }
+
+        .profit-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .profit-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #34d399);
+            transition: width 0.8s ease-out;
+        }
+
+        .risk-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .risk-low {
+            color: #10b981;
+        }
+
+        .risk-medium {
+            color: #f59e0b;
+        }
+
+        .risk-high {
+            color: #ef4444;
+        }
+
+        .expand-btn {
+            margin-top: 1.5rem;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border: none;
+            border-radius: var(--radius-md);
+            color: var(--primary);
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .expand-btn:hover {
+            background: #f0fdf4;
+        }
+
+        .detailed-analysis {
+            display: none;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #f1f5f9;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .detailed-analysis.show {
+            display: block;
+        }
+
+        .cost-breakdown {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            margin-top: 1rem;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .cost-item:last-child {
+            border-bottom: none;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body data-farmer-id="{{ current_farmer_id or '' }}">
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/profile" style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center;"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 700px; margin-top: 4rem;">
+        <div class="step-progress" id="progress-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <section class="card" style="padding: 4rem 2rem; min-height: 400px; display: flex; flex-direction: column;">
+            <form id="crop-form" style="flex: 1; display: flex; flex-direction: column;">
+
+                <!-- Step 1: Location -->
+                <div class="wizard-step active" id="step-1">
+                    <h2 class="question-title" data-i18n="wizard_step_1_title">Where do you farm?</h2>
+                    <span class="question-subtitle" data-i18n="wizard_step_1_subtitle">Select your location</span>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="wizard_state_label">State</label>
+                        <select id="state" class="form-control" style="height: 4rem; font-size: 1.1rem;">
+                            <option value="">Select State</option>
+                            {% for state in locations.keys() %}
+                            <option value="{{ state }}">{{ state }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="wizard_district_label">District</label>
+                        <select id="district" class="form-control" disabled style="height: 4rem; font-size: 1.1rem;">
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn" style="width: 100%; height: 4rem; margin-top: auto;"
+                        onclick="nextStep(2)" data-i18n="wizard_next">
+                        Next step <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <button type="button" class="btn btn-outline"
+                        style="width: 100%; height: 3.5rem; margin-top: 1rem; border-style: dashed;"
+                        onclick="runQuickDemo()" data-i18n="wizard_demo">
+                        <i class="fas fa-bolt" style="color: #f59e0b;"></i> Try Quick Demo (Skip Wizard)
+                    </button>
+                </div>
+
+                <!-- Step 2: Soil -->
+                <div class="wizard-step" id="step-2">
+                    <h2 class="question-title" data-i18n="wizard_step_2_title">What is your soil type?</h2>
+                    <span class="question-subtitle" data-i18n="wizard_step_2_subtitle">Choose soil color</span>
+
+                    <div class="selection-grid" id="soil-grid">
+                        <div class="select-card" data-value="Sandy">
+                            <i class="fas fa-boxes-stacked" style="color: #d97706;"></i>
+                            <span data-i18n="wizard_soil_sandy">Sandy</span>
+                        </div>
+                        <div class="select-card" data-value="Loamy">
+                            <i class="fas fa-mountain-sun" style="color: #65a30d;"></i>
+                            <span data-i18n="wizard_soil_loamy">Loamy</span>
+                        </div>
+                        <div class="select-card" data-value="Black">
+                            <i class="fas fa-fill-drip" style="color: #1e293b;"></i>
+                            <span data-i18n="wizard_soil_black">Black</span>
+                        </div>
+                        <div class="select-card" data-value="Red">
+                            <i class="fas fa-gem" style="color: #ef4444;"></i>
+                            <span data-i18n="wizard_soil_red">Red</span>
+                        </div>
+                        <div class="select-card" data-value="Clayey">
+                            <i class="fas fa-layer-group" style="color: #4b5563;"></i>
+                            <span data-i18n="wizard_soil_clayey">Clayey</span>
+                        </div>
+                        <div class="select-card"
+                            onclick="document.getElementById('soil-guide-modal').style.display='flex'">
+                            <i class="fas fa-question-circle" style="color: var(--primary);"></i>
+                            <span data-i18n="wizard_soil_not_sure">Not Sure?</span>
+                        </div>
+                        <div class="select-card active" data-value="">
+                            <i class="fas fa-question-circle"></i>
+                            <span data-i18n="wizard_soil_auto">Auto-Detect</span>
+                        </div>
+                    </div>
+
+                    <div class="wizard-nav" style="margin-top: auto;">
+                        <button type="button" class="btn btn-outline" style="flex: 1; height: 4rem;"
+                            onclick="nextStep(1)" data-i18n="wizard_back">Back</button>
+                        <button type="button" class="btn" style="flex: 2; height: 4rem;" onclick="nextStep(3)"
+                            data-i18n="wizard_next">Next step</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Resources -->
+                <div class="wizard-step" id="step-3">
+                    <h2 class="question-title" data-i18n="wizard_step_3_title">Water & Season</h2>
+                    <span class="question-subtitle" data-i18n="wizard_step_3_subtitle">Last step!</span>
+
+                    <label class="form-label" style="display: block; text-align: center;"
+                        data-i18n="wizard_water_label">Water Access</label>
+                    <div class="selection-grid" id="water-grid">
+                        <div class="select-card active" data-value="">
+                            <i class="fas fa-cloud-sun-rain" style="color: #0ea5e9;"></i>
+                            <span data-i18n="wizard_water_rain">Rain only</span>
+                        </div>
+                        <div class="select-card" data-value="high">
+                            <i class="fas fa-faucet-drip" style="color: #3b82f6;"></i>
+                            <span data-i18n="wizard_water_irrigated">Irrigated</span>
+                        </div>
+                    </div>
+
+                    <label class="form-label" style="display: block; text-align: center;"
+                        data-i18n="wizard_season_label">Growing Season</label>
+                    <div class="selection-grid" id="season-grid">
+                        <div class="select-card active" data-value="">
+                            <i class="fas fa-calendar-check"></i>
+                            <span data-i18n="wizard_season_auto">Auto</span>
+                        </div>
+                        <div class="select-card" data-value="kharif">
+                            <i class="fas fa-cloud-showers-heavy" style="color: #0891b2;"></i>
+                            <span data-i18n="wizard_season_kharif">Kharif</span>
+                        </div>
+                        <div class="select-card" data-value="rabi">
+                            <i class="fas fa-snowflake" style="color: #6366f1;"></i>
+                            <span data-i18n="wizard_season_rabi">Rabi</span>
+                        </div>
+                    </div>
+
+                    <div class="wizard-nav" style="margin-top: auto;">
+                        <button type="button" class="btn btn-outline" style="flex: 1; height: 4rem;"
+                            onclick="nextStep(2)" data-i18n="wizard_back">Back</button>
+                        <button type="submit" class="btn" style="flex: 2; height: 4rem;" data-i18n="wizard_get_crops">
+                            <i class="fas fa-wand-magic-sparkles"></i> Show Best Crops
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <div id="result-box" style="display: none; margin-bottom: 6rem; animation: fadeInUp 0.6s ease-out;">
+            <h2 style="font-family: 'Outfit'; font-size: 2rem; font-weight: 800; text-align: center; margin-bottom: 2.5rem;"
+                data-i18n="wizard_result_title">Recommended For You</h2>
+            <div id="crops-list"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;"></div>
+            <div id="empty-msg"
+                style="display:none; text-align: center; padding: 3rem; background: white; border-radius: var(--radius-lg);">
+                <i class="fas fa-circle-info" style="font-size: 3rem; color: #e2e8f0; margin-bottom: 1rem;"></i>
+                <p style="color: var(--text-muted);" data-i18n="empty_msg">Could not find specific matches. Try with
+                    "Auto" soil setting.</p>
+            </div>
+            <button class="btn btn-outline" style="width: 100%; margin-top: 3rem; height: 4rem;"
+                onclick="location.reload()" data-i18n="wizard_retry">
+                <i class="fas fa-redo"></i> Start Over
+            </button>
+        </div>
+    </div>
+
+    <!-- Soil Identification Guide Modal -->
+    <div id="soil-guide-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2100; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="card"
+            style="max-width: 600px; padding: 2.5rem; position: relative; max-height: 90vh; overflow-y: auto;">
+            <button onclick="document.getElementById('soil-guide-modal').style.display='none'"
+                style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 1rem;" data-i18n="soil_guide_title">
+                Soil Texture Check
+            </h3>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="soil_guide_desc">
+                The easiest way to check your soil is the "Squeeze Test". Dampen a handful of soil and squeeze it
+                firmly.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #fffbeb; border-radius: var(--radius-md); border-left: 4px solid #f59e0b; cursor: pointer;"
+                    onclick="selectSoilFromGuide('Sandy')">
+                    <i class="fas fa-boxes-stacked" style="font-size: 1.5rem; color: #d97706; margin-top: 5px;"></i>
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_sandy_title">Gritty & Loose (Sandy)
+                        </h4>
+                        <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_sandy_desc">If it feels
+                            gritty and doesn't form a ball (falls apart), it is Sandy soil.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #f0fdf4; border-radius: var(--radius-md); border-left: 4px solid var(--primary); cursor: pointer;"
+                    onclick="selectSoilFromGuide('Loamy')">
+                    <i class="fas fa-mountain-sun"
+                        style="font-size: 1.5rem; color: var(--primary); margin-top: 5px;"></i>
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_loam_title">Soft & Crumbly (Loam)</h4>
+                        <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_loam_desc">If it forms a
+                            ball that crumbles when poked, it is Loamy. Best for most crops.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #f8fafc; border-radius: var(--radius-md); border-left: 4px solid #475569; cursor: pointer;"
+                    onclick="selectSoilFromGuide('Clayey')">
+                    <i class="fas fa-layer-group" style="font-size: 1.5rem; color: #475569; margin-top: 5px;"></i>
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_clay_title">Sticky & Firm (Clay)</h4>
+                        <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_clay_desc">If it forms a
+                            tight, sticky ball that doesn't break easily, it is Clay soil.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; text-align: center;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Not sure? Red or Black
+                    soil? Select colors from the list.</p>
+                <button onclick="selectSoilFromGuide('Loamy')" class="btn btn-outline"
+                    style="width: 100%; border-style: dashed;" data-i18n="soil_guide_btn_use">
+                    Use Balanced Default (Loamy)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer style="padding: 4rem 0; border-top: 1px solid #f1f5f9; text-align: center; margin-top: 4rem;">
+        <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <p data-i18n="footer_text">Where Nature Meets Intelligence. 🌾</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script type="application/json" id="locations-data">
+        {{ locations | tojson }}
+    </script>
+    <script>
+        const stateDistrictMap = JSON.parse(document.getElementById('locations-data').textContent);
+        const stateSelect = document.getElementById('state');
+        const districtSelect = document.getElementById('district');
+        const form = document.getElementById('crop-form');
+        const resultBox = document.getElementById('result-box');
+        const cropsList = document.getElementById('crops-list');
+        const emptyMsg = document.getElementById('empty-msg');
+
+        function nextStep(step) {
+            const currentStepEl = document.querySelector('.wizard-step.active');
+            let valid = true;
+
+            if (step === 2) {
+                if (!stateSelect.value) {
+                    valid = false;
+                    stateSelect.style.borderColor = '#ef4444';
+                    stateSelect.classList.add('shake');
+                    setTimeout(() => {
+                        stateSelect.classList.remove('shake');
+                        stateSelect.style.borderColor = '';
+                    }, 500);
+                }
+                if (!districtSelect.value || districtSelect.disabled) {
+                    valid = false;
+                    districtSelect.style.borderColor = '#ef4444';
+                    districtSelect.classList.add('shake');
+                    setTimeout(() => {
+                        districtSelect.classList.remove('shake');
+                        districtSelect.style.borderColor = '';
+                    }, 500);
+                }
+            } else if (step === 3) {
+                // Check if soil is selected (Auto-Detect is allowed, if it has a value or special mark)
+                // Actually step 3 is reached from step 2. We should check grid selection.
+                // In this UI, one card is always active. No additional validation needed unless we want to force one.
+            }
+
+            if (!valid) return;
+
+            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+
+            const dots = document.getElementById('progress-dots').children;
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].classList.toggle('active', i === step - 1);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function setupSelection(gridId) {
+            const grid = document.getElementById(gridId);
+            const cards = grid.querySelectorAll('.select-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    grid.querySelector('.select-card.active').classList.remove('active');
+                    card.classList.add('active');
+                });
+            });
+        }
+
+        setupSelection('soil-grid');
+        setupSelection('water-grid');
+        setupSelection('season-grid');
+
+        const getSelectedValue = (gridId) => document.getElementById(gridId).querySelector('.select-card.active').dataset.value;
+
+        stateSelect.addEventListener('change', function () {
+            const state = this.value;
+            districtSelect.innerHTML = '<option value="">Select District</option>';
+            if (state && stateDistrictMap[state]) {
+                stateDistrictMap[state].forEach(dist => {
+                    const option = document.createElement('option');
+                    option.value = dist;
+                    option.textContent = dist;
+                    districtSelect.appendChild(option);
+                });
+                districtSelect.disabled = false;
+            } else { districtSelect.disabled = true; }
+        });
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Loading...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/crop-recommendation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        state: stateSelect.value,
+                        district: districtSelect.value,
+                        soil_type: getSelectedValue('soil-grid'),
+                        water: getSelectedValue('water-grid'),
+                        season: getSelectedValue('season-grid'),
+                        land: ""
+                    })
+                });
+
+                const data = await response.json();
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+
+                // Hide wizard section, show result section
+                form.closest('.card').style.display = 'none';
+                document.getElementById('progress-dots').style.display = 'none';
+                resultBox.style.display = 'block';
+
+                if (data.crops && data.crops.length > 0) {
+                    emptyMsg.style.display = 'none';
+                    cropsList.innerHTML = '';
+                    data.crops.forEach((crop, index) => {
+                        const profitData = calculateProfitability(crop, stateSelect.value);
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        div.innerHTML = `
+                            <div style="text-align: center;">
+                                <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
+                                <h3 style="font-family: 'Outfit'; font-size: 1.75rem; margin-bottom: 0.5rem;">
+                                    ${translations[lang]['crop_' + crop.toLowerCase().replace(/\s+/g, '_')] || crop.replace(/\+/g, ' ')}
+                                </h3>
+                                <div class="profit-badge ${profitData.profitClass}">
+                                    <i class="fas ${profitData.profitIcon}"></i>
+                                    ${translations[lang]['profit_' + profitData.profitLabel.toLowerCase().replace(/\s+/g, '_')] || profitData.profitLabel}
+                                </div>
+                            </div>
+
+                            <div class="stat-row">
+                                <div class="stat-box">
+                                    <div class="stat-label" data-i18n="al_saved_title">Expected Yield</div>
+                                    <div class="stat-value">${profitData.yield} q/ha</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label" data-i18n="mark_price_target">Market Price</div>
+                                    <div class="stat-value">₹${profitData.price}/q</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label" data-i18n="mark_total_revenue">Revenue</div>
+                                    <div class="stat-value" style="color: var(--primary);">₹${profitData.revenue.toLocaleString()}</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label" data-i18n="mark_net_profit">Net Profit</div>
+                                    <div class="stat-value" style="color: #10b981;">₹${profitData.profit.toLocaleString()}</div>
+                                </div>
+                            </div>
+
+                            <div class="profit-bar">
+                                <div class="profit-fill" style="width: ${profitData.profitPercentage}%"></div>
+                            </div>
+
+                            <div class="risk-indicator risk-${profitData.riskLevel}">
+                                <i class="fas ${profitData.riskIcon}"></i>
+                                <span>Risk: ${translations[lang]['risk_' + profitData.riskLevel.toLowerCase()] || profitData.riskLabel}</span>
+                            </div>
+
+                            <button class="expand-btn" onclick="toggleDetails(${index})">
+                                <i class="fas fa-chart-line"></i> <span data-i18n="mark_trend_analysis">View Detailed Analysis</span>
+                            </button>
+
+                            <div class="detailed-analysis" id="details-${index}">
+                                <h4 style="font-family: 'Outfit'; font-weight: 700; margin-bottom: 1rem; text-align: center;" data-i18n="mark_total_cost">
+                                    Cost Breakdown (Per Hectare)
+                                </h4>
+                                <div class="cost-breakdown">
+                                    <div class="cost-item">
+                                        <span>Seeds</span>
+                                        <span>₹${profitData.costs.seeds.toLocaleString()}</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span>Fertilizer & Pesticides</span>
+                                        <span>₹${profitData.costs.fertilizer.toLocaleString()}</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span>Labor</span>
+                                        <span>₹${profitData.costs.labor.toLocaleString()}</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span>Irrigation & Electricity</span>
+                                        <span>₹${profitData.costs.irrigation.toLocaleString()}</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span>Miscellaneous</span>
+                                        <span>₹${profitData.costs.misc.toLocaleString()}</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span data-i18n="mark_total_revenue">Total Investment</span>
+                                        <span>₹${profitData.totalCost.toLocaleString()}</span>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 1.5rem; padding: 1rem; background: #f0fdf4; border-radius: var(--radius-md); text-align: center;">
+                                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;" data-i18n="mark_net_profit">
+                                        PROFIT MARGIN
+                                    </div>
+                                    <div style="font-size: 2rem; font-weight: 800; font-family: 'Outfit'; color: #10b981;">
+                                        ${profitData.profitMargin}%
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                        Return on Investment
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 1.5rem; padding: 1rem; background: #fef3c7; border-radius: var(--radius-md);">
+                                    <div style="font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="fas fa-lightbulb" style="color: #f59e0b;"></i>
+                                        Pro Tip
+                                    </div>
+                                    <div style="font-size: 0.9rem; color: var(--text-muted);">
+                                        ${profitData.tip}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        cropsList.appendChild(div);
+                    });
+
+                    // Animate profit bars
+                    setTimeout(() => {
+                        document.querySelectorAll('.profit-fill').forEach(bar => {
+                            bar.style.width = bar.style.width;
+                        });
+                    }, 100);
+                } else {
+                    emptyMsg.style.display = 'block';
+                }
+            } catch (err) {
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+                alert(translations[lang]['mark_api_error'] || "Server error.");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Profitability Calculator
+        function calculateProfitability(cropName, state) {
+            // Crop database with realistic Indian farming data
+            const cropData = {
+                'Rice': { yield: 45, price: 2500, costs: { seeds: 5000, fertilizer: 12000, labor: 18000, irrigation: 8000, misc: 5000 }, risk: 'low', tip: 'Rice thrives in waterlogged conditions. Maintain 2-5cm standing water for best yield.' },
+                'Wheat': { yield: 42, price: 2200, costs: { seeds: 4000, fertilizer: 10000, labor: 15000, irrigation: 7000, misc: 4000 }, risk: 'low', tip: 'Wheat is a reliable Rabi crop. Apply nitrogen in 3 split doses for maximum yield.' },
+                'Maize': { yield: 50, price: 1800, costs: { seeds: 6000, fertilizer: 11000, labor: 16000, irrigation: 6000, misc: 4500 }, risk: 'medium', tip: 'Maize needs good drainage. Plant in rows for better sunlight penetration.' },
+                'Cotton': { yield: 25, price: 5500, costs: { seeds: 8000, fertilizer: 15000, labor: 25000, irrigation: 12000, misc: 8000 }, risk: 'high', tip: 'Cotton is profitable but requires careful pest management. Monitor for bollworm regularly.' },
+                'Sugarcane': { yield: 700, price: 300, costs: { seeds: 25000, fertilizer: 20000, labor: 35000, irrigation: 15000, misc: 10000 }, risk: 'medium', tip: 'Sugarcane is a long-duration crop (12 months). Ensure consistent water supply.' },
+                'Tomato': { yield: 300, price: 1200, costs: { seeds: 3000, fertilizer: 12000, labor: 20000, irrigation: 8000, misc: 7000 }, risk: 'high', tip: 'Tomato prices fluctuate significantly. Consider contract farming for price stability.' },
+                'Onion': { yield: 250, price: 1500, costs: { seeds: 4000, fertilizer: 10000, labor: 18000, irrigation: 7000, misc: 6000 }, risk: 'high', tip: 'Onion storage is crucial. Proper curing can help you sell at better prices later.' },
+                'Potato': { yield: 250, price: 1000, costs: { seeds: 15000, fertilizer: 12000, labor: 20000, irrigation: 8000, misc: 7000 }, risk: 'medium', tip: 'Potato requires well-drained soil. Earthing up is essential to prevent greening.' },
+                'Groundnut': { yield: 22, price: 5000, costs: { seeds: 8000, fertilizer: 10000, labor: 16000, irrigation: 6000, misc: 5000 }, risk: 'medium', tip: 'Groundnut fixes nitrogen in soil. Good for crop rotation. Harvest when leaves turn yellow.' },
+                'Soybean': { yield: 20, price: 4000, costs: { seeds: 5000, fertilizer: 8000, labor: 14000, irrigation: 5000, misc: 4000 }, risk: 'medium', tip: 'Soybean is a protein-rich crop with good market demand. Avoid waterlogging.' },
+                'Mustard': { yield: 18, price: 4500, costs: { seeds: 3000, fertilizer: 8000, labor: 12000, irrigation: 5000, misc: 3500 }, risk: 'low', tip: 'Mustard is a short-duration Rabi crop. Good for areas with limited irrigation.' },
+                'Pulses': { yield: 12, price: 6000, costs: { seeds: 4000, fertilizer: 6000, labor: 12000, irrigation: 4000, misc: 3000 }, risk: 'low', tip: 'Pulses improve soil fertility. Minimal fertilizer needed due to nitrogen fixation.' },
+                'Chilli': { yield: 40, price: 8000, costs: { seeds: 5000, fertilizer: 14000, labor: 22000, irrigation: 9000, misc: 8000 }, risk: 'high', tip: 'Chilli is highly profitable but labor-intensive. Protect from fruit borer and thrips.' },
+                'Turmeric': { yield: 250, price: 7000, costs: { seeds: 35000, fertilizer: 18000, labor: 30000, irrigation: 12000, misc: 10000 }, risk: 'medium', tip: 'Turmeric is a long-duration crop (8-9 months). Requires shade in early stages.' },
+                'Jowar': { yield: 30, price: 2800, costs: { seeds: 3000, fertilizer: 7000, labor: 12000, irrigation: 4000, misc: 3000 }, risk: 'low', tip: 'Jowar is drought-tolerant. Excellent for rain-fed areas. Good fodder value too.' },
+                'Bajra': { yield: 25, price: 2200, costs: { seeds: 2500, fertilizer: 6000, labor: 10000, irrigation: 3500, misc: 2500 }, risk: 'low', tip: 'Bajra grows well in sandy soils. Highly drought-resistant. Ready in 75-90 days.' }
+            };
+
+            // Normalize crop name
+            const normalizedCrop = cropName.trim().replace(/\s+/g, ' ');
+            const data = cropData[normalizedCrop] || cropData['Wheat']; // Default to Wheat if not found
+
+            // Calculate financials
+            const yieldValue = data.yield;
+            const pricePerQuintal = data.price;
+            const revenue = yieldValue * pricePerQuintal;
+            const totalCost = data.costs.seeds + data.costs.fertilizer + data.costs.labor + data.costs.irrigation + data.costs.misc;
+            const profit = revenue - totalCost;
+            const profitMargin = Math.round((profit / revenue) * 100);
+            const profitPercentage = Math.min(Math.max((profitMargin / 100) * 100, 10), 100); // Scale for visual bar
+
+            // Determine profit class
+            let profitClass, profitLabel, profitIcon;
+            if (profitMargin >= 50) {
+                profitClass = 'profit-high';
+                profitLabel = 'High Profit';
+                profitIcon = 'fa-trophy';
+            } else if (profitMargin >= 30) {
+                profitClass = 'profit-medium';
+                profitLabel = 'Good Profit';
+                profitIcon = 'fa-star';
+            } else {
+                profitClass = 'profit-low';
+                profitLabel = 'Moderate Profit';
+                profitIcon = 'fa-check-circle';
+            }
+
+            // Risk assessment
+            const riskLevel = data.risk;
+            let riskLabel, riskIcon;
+            if (riskLevel === 'low') {
+                riskLabel = 'Low';
+                riskIcon = 'fa-shield-halved';
+            } else if (riskLevel === 'medium') {
+                riskLabel = 'Medium';
+                riskIcon = 'fa-triangle-exclamation';
+            } else {
+                riskLabel = 'High';
+                riskIcon = 'fa-circle-exclamation';
+            }
+
+            return {
+                yield: yieldValue,
+                price: pricePerQuintal,
+                revenue: revenue,
+                totalCost: totalCost,
+                profit: profit,
+                profitMargin: profitMargin,
+                profitPercentage: profitPercentage,
+                profitClass: profitClass,
+                profitLabel: profitLabel,
+                profitIcon: profitIcon,
+                riskLevel: riskLevel,
+                riskLabel: riskLabel,
+                riskIcon: riskIcon,
+                costs: data.costs,
+                tip: data.tip
+            };
+        }
+
+        // Toggle detailed analysis
+        function toggleDetails(index) {
+            const details = document.getElementById(`details-${index}`);
+            // Use querySelector to find the button locally if event.target is nested
+            const btn = document.querySelector(`button[onclick="toggleDetails(${index})"]`);
+
+            if (details.classList.contains('show')) {
+                details.classList.remove('show');
+                btn.innerHTML = '<i class="fas fa-chart-line"></i> View Detailed Analysis';
+            } else {
+                details.classList.add('show');
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Details';
+            }
+        }
+
+        // Quick Demo Function
+        function runQuickDemo() {
+            // Hide wizard, show results
+            document.querySelector('.card').style.display = 'none'; // Safer selector
+            document.getElementById('progress-dots').style.display = 'none';
+            resultBox.style.display = 'block';
+            emptyMsg.style.display = 'none';
+
+            // Set fake state for calculation context
+            stateSelect.value = "Punjab";
+
+            // Hardcode demo crops and clear list
+            const demoCrops = ['Wheat', 'Rice', 'Tomato'];
+            cropsList.innerHTML = '';
+
+            // Wait a tiny bit for UI flush
+            setTimeout(() => {
+                demoCrops.forEach((crop, index) => {
+                    const profitData = calculateProfitability(crop, "Punjab");
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+
+                    div.innerHTML = `
+                        <div style="text-align: center;">
+                            <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <h3 style="font-family: 'Outfit'; font-size: 1.75rem; margin-bottom: 0.5rem;">
+                                ${crop}
+                            </h3>
+                            <div class="profit-badge ${profitData.profitClass}">
+                                <i class="fas ${profitData.profitIcon}"></i>
+                                ${profitData.profitLabel}
+                            </div>
+                        </div>
+
+                        <div class="stat-row">
+                            <div class="stat-box">
+                                <div class="stat-label">Expected Yield</div>
+                                <div class="stat-value">${profitData.yield} q/ha</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Market Price</div>
+                                <div class="stat-value">₹${profitData.price}/q</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Revenue</div>
+                                <div class="stat-value" style="color: var(--primary);">₹${profitData.revenue.toLocaleString()}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Net Profit</div>
+                                <div class="stat-value" style="color: #10b981;">₹${profitData.profit.toLocaleString()}</div>
+                            </div>
+                        </div>
+
+                        <div class="profit-bar">
+                            <div class="profit-fill" style="width: 0%"></div>
+                        </div>
+
+                        <div class="risk-indicator risk-${profitData.riskLevel}">
+                            <i class="fas ${profitData.riskIcon}"></i>
+                            Risk: ${profitData.riskLabel}
+                        </div>
+
+                        <button class="expand-btn" onclick="toggleDetails(${index})">
+                            <i class="fas fa-chart-line"></i> View Detailed Analysis
+                        </button>
+
+                        <div class="detailed-analysis" id="details-${index}">
+                            <h4 style="font-family: 'Outfit'; font-weight: 700; margin-bottom: 1rem; text-align: center;">
+                                Cost Breakdown (Per Hectare)
+                            </h4>
+                            <div class="cost-breakdown">
+                                <div class="cost-item">
+                                    <span>Seeds</span>
+                                    <span>₹${profitData.costs.seeds.toLocaleString()}</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Fertilizer & Pesticides</span>
+                                    <span>₹${profitData.costs.fertilizer.toLocaleString()}</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Labor</span>
+                                    <span>₹${profitData.costs.labor.toLocaleString()}</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Irrigation & Electricity</span>
+                                    <span>₹${profitData.costs.irrigation.toLocaleString()}</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Miscellaneous</span>
+                                    <span>₹${profitData.costs.misc.toLocaleString()}</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Total Investment</span>
+                                    <span>₹${profitData.totalCost.toLocaleString()}</span>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 1.5rem; padding: 1rem; background: #f0fdf4; border-radius: var(--radius-md); text-align: center;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                    PROFIT MARGIN
+                                </div>
+                                <div style="font-size: 2rem; font-weight: 800; font-family: 'Outfit'; color: #10b981;">
+                                    ${profitData.profitMargin}%
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                    Return on Investment
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 1.5rem; padding: 1rem; background: #fef3c7; border-radius: var(--radius-md);">
+                                <div style="font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-lightbulb" style="color: #f59e0b;"></i>
+                                    Pro Tip
+                                </div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted);">
+                                    ${profitData.tip}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    cropsList.appendChild(div);
+                });
+
+            }, 50);
+        }
+
+        function selectSoilFromGuide(soilType) {
+            const grid = document.getElementById('soil-grid');
+            const targetCard = Array.from(grid.querySelectorAll('.select-card')).find(c => c.dataset.value === soilType);
+            if (targetCard) {
+                grid.querySelector('.select-card.active').classList.remove('active');
+                targetCard.classList.add('active');
+            }
+            document.getElementById('soil-guide-modal').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

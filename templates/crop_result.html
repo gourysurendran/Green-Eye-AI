@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crop Recommendation Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="dashboard-page">
+
+<div class="dashboard-header">
+    🌱 Crop Recommendation Result
+</div>
+
+<div class="dashboard-container">
+
+    {% if error %}
+        <div class="dashboard-card">
+            <h3>⚠️ Error</h3>
+            <p>{{ error }}</p>
+        </div>
+    {% else %}
+
+        <div class="dashboard-card">
+            <h3>📍 Location</h3>
+            <p>{{ district }}, {{ state }}</p>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>🌦️ Weather Today</h3>
+            <p>🌡️ Temperature: {{ temperature }} °C</p>
+            <p>💧 Humidity: {{ humidity }} %</p>
+            <p>💨 Wind Speed: {{ wind }} m/s</p>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>🧪 Fertilizer Guidance</h3>
+            <p><b>{{ fertilizer_advice }}</b></p>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>📅 Crop Calendar Advice</h3>
+            <p><b>{{ calendar_advice }}</b></p>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>🌾 Recommended Crops</h3>
+            <ul>
+                {% for crop in crops %}
+                    <li>{{ crop }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    {% endif %}
+
+</div>
+
+<div class="dashboard-footer">
+    <a href="/crop-recommendation">⬅ Back</a>
+</div>
+
+</body>
+</html>

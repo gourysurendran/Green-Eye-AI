@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Pulse - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .market-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-badge {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid #f1f5f9;
+            text-align: center;
+        }
+
+        .table-wrapper {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid #f1f5f9;
+            overflow: hidden;
+            box-shadow: var(--glass-shadow);
+            margin-bottom: 4rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            font-family: 'Outfit';
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        td {
+            padding: 1.5rem;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 0.95rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fcfdfe;
+        }
+
+        .commodity-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .commodity-icon {
+            width: 40px;
+            height: 40px;
+            background: #f0fdf4;
+            color: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .price-chip {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #f0fdf4;
+            color: var(--primary);
+            border-radius: 50px;
+            font-weight: 800;
+            font-family: 'Outfit';
+            font-size: 1.1rem;
+        }
+
+        .market-tag {
+            font-size: 0.8rem;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Price Alert Styles */
+        .alerts-section {
+            margin-bottom: 4rem;
+        }
+
+        .alert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .alert-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .alert-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--glass-shadow);
+            border-color: var(--primary-light);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .alert-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .target-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: 'Outfit';
+        }
+
+        .current-status {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            background: #f1f5f9;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: fit-content;
+        }
+
+        .status-met {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-waiting {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .delete-alert {
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .delete-alert:hover {
+            color: #ef4444;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: scale(0.95);
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .source-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-live {
+            background-color: #d1fae5;
+            color: #047857;
+            border: 1px solid #10b981;
+        }
+
+        .badge-ai {
+            background-color: #ffedd5;
+            color: #c2410c;
+            border: 1px solid #f97316;
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body data-farmer-id="{{ current_farmer_id or '' }}">
+
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/disease" data-i18n="nav_disease">Disease Detect</a>
+            <a href="/crop-recommendation" data-i18n="btn_crops">Smart Advisor</a>
+            <a href="/profile"
+                style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center; transition: var(--transition);"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+            <a href="/live-chat" data-i18n="nav_chat">Expert Chat</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="hero" style="padding: 4rem 0 2rem;">
+            <div class="hero-badge" data-i18n="market_hero_badge">
+                <i class="fas fa-chart-line-up" style="margin-right: 8px;"></i> Real-Time Commodity Tracker
+            </div>
+            <h1 style="font-size: 3.5rem;" data-i18n="market_hero_title">Market Insights.</h1>
+            <p data-i18n="market_hero_desc">Direct connectivity to 2,000+ AGMARKNET markets across India. Get the best
+                value for your hard work.</p>
+        </header>
+
+        <section class="card" style="padding: 2.5rem; margin-bottom: 4rem;">
+            <form id="market-form">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="market_label_geo">Geography</label>
+                        <select id="state" class="form-control">
+                            <option value="">All Regions (India)</option>
+                            {% for state in locations.keys() %}
+                            <option value="{{ state }}">{{ state }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="market_label_dist">District</label>
+                        <select id="district" class="form-control" disabled>
+                            <option value="">All Local Markets</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="market_label_comm">Commodity</label>
+                        <div style="position: relative;">
+                            <i class="fas fa-magnifying-glass"
+                                style="position: absolute; left: 1rem; top: 1.1rem; color: var(--text-muted);"></i>
+                            <input type="text" id="commodity" class="form-control" data-i18n="market_placeholder_search"
+                                placeholder="Search Crop..." style="padding-left: 3rem;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="btn" style="width: 100%;" data-i18n="market_btn_refresh">
+                            <i class="fas fa-arrows-rotate"></i> Refresh Data
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Price Alerts Section -->
+        <section class="alerts-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 0.5rem;"
+                        data-i18n="mark_my_alerts">My Price Alerts</h2>
+                    <p class="text-muted" data-i18n="mark_alerts_desc">Get notified when prices reach your target.</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="openProfitModal()" class="btn" style="background: #8b5cf6;">
+                        <i class="fas fa-calculator"></i> Profit Simulator
+                    </button>
+                    <button onclick="openAlertModal()" class="btn btn-outline" style="border-style: dashed;"
+                        data-i18n="mark_btn_new_alert">
+                        <i class="fas fa-bell-plus"></i> Set New Alert
+                    </button>
+                </div>
+            </div>
+
+            <div id="alerts-container" class="alert-grid">
+                <!-- Alerts will be injected here -->
+                <div class="empty-state"
+                    style="grid-column: 1/-1; text-align: center; padding: 4rem; background: white; border-radius: var(--radius-lg); border: 2px dashed #e2e8f0;">
+                    <div style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <h3 style="color: var(--text-muted);" data-i18n="mark_no_alerts">No active price alerts</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="mark_no_alerts_desc">Set a target
+                        price to get notified
+                        instantly.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profit Simulator Modal -->
+        <div id="profit-modal" class="modal-overlay">
+            <div class="modal-card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.5rem;" data-i18n="mark_profit_sim">Profitability
+                        Simulator</h3>
+                    <button onclick="closeProfitModal()"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;" data-i18n="mark_quick_calc">
+                        Quick Calculation:</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="mark_harvest_kg">Harvest (Kg)</label>
+                            <input type="number" id="sim-weight" class="form-control" placeholder="1000" value="1000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="mark_price_kg">Price (₹/Kg)</label>
+                            <input type="number" id="sim-price" class="form-control" placeholder="25">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" data-i18n="mark_total_cost">Total Cost (₹)</label>
+                        <input type="number" id="sim-cost" class="form-control" placeholder="Estimated expenses"
+                            value="5000">
+                    </div>
+                </div>
+
+                <div style="background: white; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <span style="color: #64748b;" data-i18n="mark_total_revenue">Total Revenue:</span>
+                        <span id="res-revenue" style="font-weight: 700; color: #1e293b;">₹0</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 1rem;">
+                        <span style="font-weight: 700; color: #1e293b;" data-i18n="mark_net_profit">Net Profit:</span>
+                        <span id="res-profit" style="font-weight: 800; font-size: 1.5rem; color: #059669;">₹0</span>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.75rem; color: #64748b; margin-top: 1rem; text-align: center;">
+                    <i class="fas fa-info-circle"></i> <span data-i18n="mark_estimate_note">This is an estimate based on
+                        your provided inputs.</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- New Alert Modal -->
+        <div id="alert-modal" class="modal-overlay">
+            <div class="modal-card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.5rem;" data-i18n="mark_set_alert">Set Price Alert
+                    </h3>
+                    <button onclick="closeAlertModal()"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="alert-form">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="mark_commodity">Commodity</label>
+                        <select id="alert-commodity" class="form-control" required>
+                            <option value="">Select Crop</option>
+                            <option value="Wheat">Wheat</option>
+                            <option value="Rice">Rice</option>
+                            <option value="Cotton">Cotton</option>
+                            <option value="Maize">Maize</option>
+                            <option value="Sugarcane">Sugarcane</option>
+                            <option value="Tomato">Tomato</option>
+                            <option value="Onion">Onion</option>
+                            <option value="Potato">Potato</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="form-label" data-i18n="mark_state">State</label>
+                        <select id="alert-state" class="form-control" required>
+                            <option value="">Select State</option>
+                            {% for state in locations.keys() %}
+                            <option value="{{ state }}">{{ state }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="form-label" data-i18n="mark_target_alert">Target Price (₹/kg)</label>
+                        <div style="position: relative;">
+                            <span
+                                style="position: absolute; left: 1rem; top: 1.2rem; color: var(--text-muted); font-weight: 600;">₹</span>
+                            <input type="number" id="alert-price" class="form-control" style="padding-left: 2.5rem;"
+                                placeholder="e.g. 2500" required min="10">
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;"
+                            data-i18n="mark_alert_desc">
+                            We'll notify you when the price goes above this amount.
+                        </p>
+                    </div>
+
+                    <button type="submit" class="btn" style="width: 100%; margin-top: 2rem; height: 3.5rem;">
+                        <i class="fas fa-check-circle"></i> Save Alert
+                    </button>
+                </form>
+            </div>
+        </div>
+
+
+        <div class="market-stats">
+            <div class="stat-badge">
+                <div style="color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;"
+                    data-i18n="market_stat_active">
+                    Active Markets</div>
+                <div style="font-size: 2rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main);">2,481
+                </div>
+            </div>
+            <div class="stat-badge">
+                <div style="color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;"
+                    data-i18n="market_stat_volume">
+                    Daily Volume</div>
+                <div style="font-size: 2rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main);">Over 1M
+                    Tonnes</div>
+            </div>
+            <div class="stat-badge">
+                <div style="color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;"
+                    data-i18n="market_stat_accuracy">
+                    Data Accuracy</div>
+                <div style="font-size: 2rem; font-weight: 800; font-family: 'Outfit'; color: var(--primary);">Real-Time
+                </div>
+                <a href="/live-chat?msg=Hello%20Expert%2C%20I%20want%20to%20know%20more%20about%20current%20market%20trends%20for%20my%20crops."
+                    style="font-size: 0.75rem; color: var(--primary); font-weight: 700; text-decoration: none; display: block; margin-top: 0.5rem;">
+                    <i class="fas fa-comments"></i> Ask Expert About Trends
+                </a>
+            </div>
+        </div>
+
+        <div id="results-area">
+            <div class="table-wrapper">
+                <table id="price-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="market_th_comm">Commodity</th>
+                            <th data-i18n="market_th_info">Market Info</th>
+                            <th data-i18n="market_th_state">Reported State</th>
+                            <th data-i18n="market_th_range">Price Range (₹/kg)</th>
+                            <th data-i18n="market_th_modal">Modal Price (₹/kg)</th>
+                            <th data-i18n="market_th_update">Last Update</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows loaded via JS -->
+                    </tbody>
+                </table>
+                <div id="loading-msg" style="padding: 4rem; text-align: center; display: none;">
+                    <i class="fas fa-circle-notch fa-spin"
+                        style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                    <p style="color: var(--text-muted); font-weight: 600;" data-i18n="mark_api_loading">Connecting to
+                        National Market API...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="/live-chat" class="floating-help-btn">
+        <i class="fas fa-comment-dots"></i>
+        <span data-i18n="btn_ask_help">Ask for Help?</span>
+    </a>
+
+    <footer style="padding: 4rem 0; background: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center;">
+        <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <p data-i18n="footer_text">Where Nature Meets Intelligence.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script type="application/json" id="locations-data">
+        {{ locations | tojson }}
+    </script>
+    <script>
+        // Safe translation helper — prevents crashes if translations not loaded or key missing
+        function t(key, fallback) {
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            try { return (translations && translations[lang] && translations[lang][key]) ? translations[lang][key] : fallback; }
+            catch (e) { return fallback; }
+        }
+    </script>
+    <script>
+        const stateDistrictMap = JSON.parse(document.getElementById('locations-data').textContent);
+        const stateSelect = document.getElementById('state');
+        const districtSelect = document.getElementById('district');
+        const form = document.getElementById('market-form');
+        const tableBody = document.querySelector('#price-table tbody');
+        const loadingMsg = document.getElementById('loading-msg');
+        const alertsContainer = document.getElementById('alerts-container');
+        const alertModal = document.getElementById('alert-modal');
+        const alertForm = document.getElementById('alert-form');
+
+        // Initialize
+        stateSelect.addEventListener('change', function () {
+            const state = this.value;
+            districtSelect.innerHTML = '<option value="">All Local Markets</option>';
+
+            if (state && stateDistrictMap[state]) {
+                stateDistrictMap[state].forEach(dist => {
+                    const opt = document.createElement('option');
+                    opt.value = dist;
+                    opt.textContent = dist;
+                    districtSelect.appendChild(opt);
+                });
+                districtSelect.disabled = false;
+                // Auto-fetch state data immediately
+                fetchPrices();
+            } else {
+                districtSelect.disabled = true;
+                if (!state) fetchPrices(); // Fetch national data if cleared
+            }
+        });
+
+        // Auto-fetch on district change
+        districtSelect.addEventListener('change', fetchPrices);
+
+        // Debounce search for commodity
+        let timeout = null;
+        document.getElementById('commodity').addEventListener('input', function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(fetchPrices, 800);
+        });
+
+        window.addEventListener('load', () => {
+            fetchPrices();
+            loadAlerts();
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const commodity = document.getElementById('commodity');
+            if (stateSelect.value && !commodity.value) {
+                // Not strictly required but we can warn
+                commodity.style.borderColor = '#f59e0b'; // Warning color
+            } else {
+                commodity.style.borderColor = '';
+            }
+            fetchPrices();
+        });
+
+        // Market Data Logic
+        async function fetchPrices() {
+            const state = stateSelect.value;
+            const district = districtSelect.value;
+            const commodity = document.getElementById('commodity').value;
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+
+            loadingMsg.style.display = 'block';
+            tableBody.style.opacity = '0.5'; // Dim existing data while loading
+
+            try {
+                // Request more items (100) to show "all places" as requested
+                const url = `/api/market-prices?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}&commodity=${encodeURIComponent(commodity)}&limit=100`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                tableBody.innerHTML = '';
+                tableBody.style.opacity = '1';
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="padding:4rem; text-align:center; color: var(--text-muted); font-weight: 600;">${t('mark_no_data', 'No live data available for this selection. Try adjusting filters or select a different market.')}</td></tr>`;
+                } else {
+                    data.forEach(row => {
+                        const sourceType = row.source === 'AI Estimate' ? 'badge-ai' : 'badge-live';
+                        const sourceLabel = row.source === 'AI Estimate' ? t('mark_badge_simulated', 'Simulated') : t('mark_badge_live', 'Live');
+
+                        const tr = document.createElement('tr');
+                        const commodityKey = 'crop_' + row.commodity_name.toLowerCase().replace(/\s+/g, '_');
+                        const commodityDisplay = t(commodityKey, row.commodity_name);
+
+                        tr.innerHTML = `
+                            <td>
+                                <div class="commodity-name">
+                                    <div class="commodity-icon"><i class="fas fa-seedling"></i></div>
+                                    <div>
+                                        ${commodityDisplay}
+                                        <span class="source-badge ${sourceType}">${sourceLabel}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: var(--text-main);">${row.market}</div>
+                                <div class="market-tag">${row.district || 'Mandi'}</div>
+                            </td>
+                            <td><div style="font-weight: 600;">${row.state}</div></td>
+                            <td>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                    Min: <span style="font-weight:700; color:#64748b;">₹${row.min_price}</span><br>
+                                    Max: <span style="font-weight:700; color:#64748b;">₹${row.max_price}</span>
+                                </div>
+                            </td>
+                            <td><div class="price-chip">₹${row.modal_price}</div></td>
+                            <td><div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">${row.date}</div></td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                tableBody.innerHTML = `<tr><td colspan="6" style="padding:4rem; text-align:center; color:#ef4444; font-weight: 700;">${t('mark_api_error', 'Data could not be loaded. Please try again.')}</td></tr>`;
+            } finally {
+                loadingMsg.style.display = 'none';
+                tableBody.style.opacity = '1';
+            }
+        }
+
+        // --- Alert Logic ---
+
+        function openAlertModal() {
+            alertModal.classList.add('active');
+        }
+
+        function closeAlertModal() {
+            alertModal.classList.remove('active');
+        }
+
+        // --- Profit Simulator Logic ---
+        function openProfitModal() {
+            document.getElementById('profit-modal').classList.add('active');
+
+            // Auto-fill price if we have data in the table
+            const firstPrice = document.querySelector('.price-chip');
+            if (firstPrice) {
+                document.getElementById('sim-price').value = firstPrice.textContent.replace('₹', '');
+                calculateProfit();
+            }
+        }
+
+        function closeProfitModal() {
+            document.getElementById('profit-modal').classList.remove('active');
+        }
+
+        function calculateProfit() {
+            const weight = parseFloat(document.getElementById('sim-weight').value) || 0;
+            const price = parseFloat(document.getElementById('sim-price').value) || 0;
+            const cost = parseFloat(document.getElementById('sim-cost').value) || 0;
+
+            const revenue = weight * price;
+            const profit = revenue - cost;
+
+            document.getElementById('res-revenue').textContent = `₹${revenue.toLocaleString()}`;
+            document.getElementById('res-profit').textContent = `₹${profit.toLocaleString()}`;
+            document.getElementById('res-profit').style.color = profit >= 0 ? '#059669' : '#ef4444';
+        }
+
+        ['sim-weight', 'sim-price', 'sim-cost'].forEach(id => {
+            document.getElementById(id).addEventListener('input', function () {
+                const el = this;
+                if (parseFloat(el.value) < 0) {
+                    el.value = 0;
+                    el.classList.add('shake');
+                    setTimeout(() => el.classList.remove('shake'), 400);
+                }
+                calculateProfit();
+            });
+        });
+
+        alertForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const commoditySelect = document.getElementById('alert-commodity');
+            const stateSelectAlert = document.getElementById('alert-state');
+            const priceInput = document.getElementById('alert-price');
+            const btn = alertForm.querySelector('button[type="submit"]');
+
+            let valid = true;
+            [commoditySelect, stateSelectAlert, priceInput].forEach(el => {
+                if (!el.value) {
+                    valid = false;
+                    el.style.borderColor = '#ef4444';
+                    el.classList.add('shake');
+                    setTimeout(() => el.classList.remove('shake'), 400);
+                } else {
+                    el.style.borderColor = '';
+                }
+            });
+
+            if (!valid) return;
+
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            try {
+                await fetch('/api/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        commodity: commoditySelect.value,
+                        state: stateSelectAlert.value,
+                        target_price: priceInput.value
+                    })
+                });
+
+                closeAlertModal();
+                loadAlerts();
+                alertForm.reset();
+
+            } catch (err) {
+                alert("Failed to save alert.");
+            } finally {
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Save Alert';
+                btn.disabled = false;
+            }
+        });
+
+        async function loadAlerts() {
+            try {
+                const response = await fetch('/api/alerts');
+                const alerts = await response.json();
+
+                if (alerts.length === 0) {
+                    const lang = localStorage.getItem('preferredLanguage') || 'en';
+                    alertsContainer.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 4rem; background: white; border-radius: var(--radius-lg); border: 2px dashed #e2e8f0;">
+                            <div style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;">
+                                <i class="fas fa-bell-slash"></i>
+                            </div>
+                            <h3 style="color: var(--text-muted);" data-i18n="mark_no_alerts">${translations[lang]['mark_no_alerts'] || 'No active price alerts'}</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="mark_no_alerts_desc">${translations[lang]['mark_no_alerts_desc'] || 'Set a target price to get notified instantly.'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                alertsContainer.innerHTML = '';
+
+                // Get current prices for each alert to check status
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+                for (const alert of alerts) {
+                    const status = await checkAlertStatus(alert);
+                    const commodityKey = 'crop_' + alert.commodity.toLowerCase().replace(/\s+/g, '_');
+                    const commodityDisplay = translations[lang][commodityKey] || alert.commodity;
+
+                    const div = document.createElement('div');
+                    div.className = 'alert-card';
+                    div.innerHTML = `
+                        <div class="alert-header">
+                            <div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                                    ${commodityDisplay} • ${alert.state}
+                                </div>
+                                <div class="target-price">₹${alert.target_price}</div>
+                            </div>
+                            <button class="delete-alert" onclick="deleteAlert('${alert.id}')" title="Delete Alert">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                        <div class="alert-content">
+                            ${status.html}
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;">
+                                ${translations[lang]['mark_created_at'] || 'Created'}: ${alert.created_at}
+                            </div>
+                        </div>
+                    `;
+                    alertsContainer.appendChild(div);
+                }
+            } catch (err) {
+                console.error("Error loading alerts:", err);
+            }
+        }
+
+        async function checkAlertStatus(alert) {
+            try {
+                // Fetch current market price for this specific alert criteria
+                const url = `/api/market-prices?state=${encodeURIComponent(alert.state)}&commodity=${encodeURIComponent(alert.commodity)}&limit=1`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const currentPrice = data[0].modal_price;
+                    const isMet = currentPrice >= alert.target_price;
+                    const lang = localStorage.getItem('preferredLanguage') || 'en';
+
+                    if (isMet) {
+                        return {
+                            html: `
+                                <div class="current-status status-met">
+                                    <i class="fas fa-check-circle"></i> ${translations[lang]['mark_target_met'] || 'Target Met'}: ₹${currentPrice}
+                                </div>
+                                <div style="font-size: 0.8rem; color: #166534;">
+                                    ${translations[lang]['mark_status_met_msg'] || 'Price is good! Consider selling now.'}
+                                </div>
+                            `
+                        };
+                    } else {
+                        return {
+                            html: `
+                                <div class="current-status status-waiting">
+                                    <i class="fas fa-clock"></i> ${translations[lang]['mark_current_price'] || 'Current'}: ₹${currentPrice}
+                                </div>
+                                <div style="font-size: 0.8rem; color: #9a3412;">
+                                    ${translations[lang]['mark_status_wait_msg'] || 'Waiting for price to rise...'}
+                                </div>
+                            `
+                        };
+                    }
+                }
+
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+                return {
+                    html: `
+                        <div class="current-status" style="background: #f1f5f9; color: #64748b;">
+                            <i class="fas fa-question-circle"></i> ${translations[lang]['mark_no_data_msg'] || 'No Data'}
+                        </div>
+                    `
+                };
+            } catch (e) {
+                return { html: '<div class="text-error">Error checking price</div>' };
+            }
+        }
+
+        async function deleteAlert(id) {
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            if (!confirm(translations[lang]['mark_delete_confirm'] || "Delete this alert?")) return;
+
+            await fetch(`/api/alerts?id=${id}`, { method: 'DELETE' });
+            loadAlerts();
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Farming Basics - Green Eye</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="navbar container">
+        <div class="logo">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard">Home</a>
+            <a href="/tutorials" style="color: var(--primary-color);">Tutorials</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 900px;">
+        <div class="hero" style="padding: 2rem 0; text-align: left;">
+            <h1>Farming Basics</h1>
+            <p>An introduction to the world of agriculture for new farmers.</p>
+        </div>
+
+        <div class="tutorial-content card" style="margin-bottom: 2rem;">
+            <h2><i class="fas fa-seedling" style="color: var(--primary-color); margin-right: 10px;"></i> What is
+                Farming?</h2>
+            <p>Farming is the practice of growing harvestable crops and raising animals for food, fiber, medicinal
+                plants, and other products used to sustain and enhance human life.</p>
+
+            <div class="video-container">
+                <!-- Placeholder for an educational video -->
+                <iframe src="https://www.youtube.com/embed/ZzT7O2934gU" title="Farming Basics" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="card">
+                <h3><i class="fas fa-warehouse"></i> Types of Farming</h3>
+                <ul style="list-style: none; padding-left: 0; margin-top: 1rem;">
+                    <li style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                            style="color: var(--primary-light);"></i> <strong>Subsistence:</strong> Growing purely for
+                        self-consumption.</li>
+                    <li style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                            style="color: var(--primary-light);"></i> <strong>Commercial:</strong> Large-scale
+                        production for selling.</li>
+                    <li style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                            style="color: var(--primary-light);"></i> <strong>Organic:</strong> Farming without
+                        synthetic chemicals.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-book"></i> Key Terminology</h3>
+                <ul style="list-style: none; padding-left: 0; margin-top: 1rem;">
+                    <li style="margin-bottom: 0.5rem;"><strong>Crop:</strong> A plant cultivated for harvest.</li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Soil:</strong> The upper layer of earth in which plants
+                        grow.</li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Irrigation:</strong> Artificial application of water.
+                    </li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Harvest:</strong> Process of gathering mature crops.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="/tutorials" class="btn btn-outline">Back to Tutorials</a>
+            <a href="/tutorials/soil-preparation" class="btn">Next: Soil Preparation <i
+                    class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+
+</body>
+
+</html>

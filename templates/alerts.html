@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Time Alerts - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .wizard-container {
+            max-width: 700px;
+            margin: 2rem auto 6rem;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-xl);
+            padding: 3rem;
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e2e8f0;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            z-index: 2;
+            transition: var(--transition);
+        }
+
+        .step-dot.bar {
+            width: auto;
+            height: 4px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        .step-dot.active {
+            background: var(--primary);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+            transform: scale(1.2);
+        }
+
+        .step-dot.bar.active {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .wizard-step {
+            display: none;
+            animation: fadeInRight 0.5s ease-out;
+        }
+
+        .wizard-step.active {
+            display: block;
+        }
+
+        .question-title {
+            font-family: 'Outfit';
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .question-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #475569;
+        }
+
+        .opt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .opt-card {
+            background: white;
+            border: 2px solid #f1f5f9;
+            padding: 1.5rem 1rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .opt-card:hover {
+            border-color: var(--primary-light);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .opt-card.selected {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .opt-card i {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
+        }
+
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .viva-box {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px dashed var(--primary);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: var(--primary-dark);
+            font-style: italic;
+        }
+
+        /* Timeline Styles */
+        #alert-results {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            background: #e2e8f0;
+            top: 0;
+            bottom: 0;
+            left: 50px;
+        }
+
+        .alert-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 80px;
+            animation: slideInUp 0.6s ease-out backwards;
+        }
+
+        .alert-icon {
+            position: absolute;
+            left: 30px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            color: var(--primary);
+        }
+
+        .alert-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #f1f5f9;
+        }
+
+        .alert-time {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOutDown {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body data-farmer-id="{{ current_farmer_id or '' }}">
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/profile" style="color: var(--primary); font-size: 1.4rem;">
+                <i class="fas fa-user-circle"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 3rem;">
+        <header class="hero" style="padding: 2rem 0; text-align: center; position: relative;">
+            <div class="hero-badge" style="background: rgba(16, 185, 189, 0.1); color: var(--primary);">
+                <i class="fas fa-bolt" style="margin-right: 8px;"></i> <span data-i18n="al_smart_gen">Smart Alert
+                    Generator</span>
+            </div>
+            <h1 id="page-title" data-i18n="alert_hero_title">Time Alerts.</h1>
+            <p id="page-subtitle" data-i18n="al_wizard_desc">Answer 9 short questions to generate your personalized
+                farming schedule.</p>
+        </header>
+
+        <!-- Current Crop Status Bar -->
+        <div id="crop-status-bar"
+            style="display: none; max-width: 700px; margin: 0 auto 2rem; background: white; padding: 1rem; border-radius: var(--radius-md); box-shadow: var(--glass-shadow); align-items: center; justify-content: space-between;">
+            <div style="font-weight: 700; color: var(--text-main); display: flex; align-items: center;">
+                <div
+                    style="width: 3rem; height: 3rem; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                    <i class="fas fa-seedling" style="color: var(--primary);"></i>
+                </div>
+                <div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;"
+                        data-i18n="al_current_crop">
+                        Current Crop</div>
+                    <div id="status-crop-name" style="font-size: 1.2rem;">Unknown</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn" onclick="toggleUpdatesDashboard()" id="dashboard-toggle-btn"
+                    style="font-size: 0.9rem; padding: 0.5rem 1rem; background: var(--primary);">
+                    <i class="fas fa-history" style="margin-right: 5px;"></i> Updates
+                </button>
+                <button class="btn btn-secondary" onclick="handleCropChange(true)"
+                    style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                    <i class="fas fa-sync-alt" style="margin-right: 5px;"></i> Change
+                </button>
+            </div>
+        </div>
+
+        <!-- Daily Check-in Section -->
+        <div id="daily-checkin-box" class="wizard-container" style="display: none; border: 2px solid var(--primary);">
+            <div style="text-align: center;">
+                <h2 class="question-title" data-i18n="al_daily_title">Daily Check-in 📋</h2>
+                <p id="daily-subtitle" class="question-subtitle" data-i18n="al_daily_subtitle">How is your crop looking
+                    today?</p>
+
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem;" id="daily-step-dots">
+                    <div class="step-dot bar active"></div>
+                    <div class="step-dot bar"></div>
+                    <div class="step-dot bar"></div>
+                </div>
+
+                <form id="daily-form">
+                    <!-- Daily Step 1: Stage -->
+                    <div class="daily-step" id="daily-step-1">
+                        <label class="form-label" data-i18n="al_stage_q">What growth stage is your crop in?</label>
+                        <select class="form-input" name="growth_stage" required style="height: 3.5rem;">
+                            <option value="" disabled selected>Select Stage...</option>
+                            <option value="Establishment">Seedling / Establishment</option>
+                            <option value="Vegetative">Vegetative Growth</option>
+                            <option value="Flowering">Flowering Stage</option>
+                            <option value="Maturity">Maturity / Harvest Ready</option>
+                        </select>
+                    </div>
+
+                    <!-- Daily Step 2: Problems -->
+                    <div class="daily-step" id="daily-step-2" style="display: none;">
+                        <label class="form-label" data-i18n="al_issue_q">Are you noticing any of these issues?</label>
+                        <select class="form-input" name="problems" required style="height: 3.5rem;">
+                            <option value="" disabled selected>Select Issue...</option>
+                            <option value="None">Everything looks healthy</option>
+                            <option value="Yellowing">Yellowing of leaves</option>
+                            <option value="Stunted">Stunted / Slow growth</option>
+                            <option value="Pests">Insect or pest activity</option>
+                            <option value="Water Stress">Wilting / Dryness</option>
+                        </select>
+                    </div>
+
+                    <!-- Daily Step 3: Status & Note -->
+                    <div class="daily-step" id="daily-step-3" style="display: none;">
+                        <label class="form-label" data-i18n="al_conf_q">General Confidence?</label>
+                        <div class="opt-grid" style="margin-bottom: 1.5rem;">
+                            <div class="opt-card daily-opt selected" data-val="Healthy" data-i18n="al_good">Looking Good
+                            </div>
+                            <div class="opt-card daily-opt" data-val="Issues" data-i18n="al_attention">Needs Attention
+                            </div>
+                        </div>
+                        <input type="hidden" name="daily_status" id="daily_status_input" value="Healthy">
+
+                        <label class="form-label" data-i18n="al_note_label">Quick Note (Optional)</label>
+                        <textarea class="form-input" name="daily_note" placeholder="Any specific observations?"
+                            data-i18n="al_note_placeholder"></textarea>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                        <button type="button" id="daily-prev" class="btn btn-secondary" style="visibility: hidden;"
+                            data-i18n="wizard_back">Back</button>
+                        <button type="button" id="daily-next" class="btn" data-i18n="wizard_next">Next Step</button>
+                        <button type="submit" id="daily-submit-btn" class="btn"
+                            style="display: none; width: 100%;">Refine My Schedule</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Crop Modal (Simple Overlay) -->
+        <div id="change-crop-modal" class="wizard-container"
+            style="display: none; text-align: center; border-color: #f59e0b;">
+            <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <h2 class="question-title" data-i18n="al_saved_title">Response Saved!</h2>
+            <p class="question-subtitle" data-i18n="al_saved_desc">Do you want to change/update your crop settings?</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                <button onclick="handleCropChange(true)" class="btn btn-secondary">Yes, Change Crop</button>
+                <button onclick="handleCropChange(false)" class="btn">No, View Alerts</button>
+            </div>
+        </div>
+
+        <!-- Updates Dashboard -->
+        <div id="updates-dashboard" class="wizard-container" style="display: none; max-width: 900px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h2 class="question-title" style="margin-bottom: 0.25rem;" data-i18n="al_dash_title">📊 Updates
+                        Dashboard</h2>
+                    <p class="question-subtitle" style="margin-bottom: 0;" data-i18n="al_dash_subtitle">Track your daily
+                        crop observations</p>
+                </div>
+                <button onclick="toggleUpdatesDashboard()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+
+            <!-- Stats Summary -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: var(--radius-md); text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary);" id="total-logs">0</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);" data-i18n="al_total_logs">Total Logs
+                    </div>
+                </div>
+                <div
+                    style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: var(--radius-md); text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #3b82f6;" id="healthy-days">0</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);" data-i18n="al_healthy_days">Healthy Days
+                    </div>
+                </div>
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: var(--radius-md); text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #ef4444;" id="issue-days">0</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);" data-i18n="al_issue_days">Issue Days
+                    </div>
+                </div>
+                <div
+                    style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: var(--radius-md); text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #f59e0b;" id="current-streak">0</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);" data-i18n="al_streak">Day Streak</div>
+                </div>
+            </div>
+
+            <!-- Chart Area -->
+            <div
+                style="background: white; padding: 1.5rem; border-radius: var(--radius-md); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                <h3 style="font-family: 'Outfit'; font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-main);"
+                    data-i18n="al_chart_title">Crop Health Trends</h3>
+                <div style="position: relative; width: 100%; height: 250px;">
+                    <canvas id="updatesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Filter Options -->
+            <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <select id="filter-status" class="form-input" style="flex: 1; min-width: 150px;">
+                    <option value="all">All Status</option>
+                    <option value="Healthy">Healthy Only</option>
+                    <option value="Issues">Issues Only</option>
+                    <option value="Harvested">Harvested</option>
+                </select>
+                <input type="text" id="search-logs" class="form-input" placeholder="Search notes..."
+                    style="flex: 2; min-width: 200px;">
+            </div>
+
+            <!-- Logs Timeline -->
+            <div id="logs-container" style="max-height: 500px; overflow-y: auto; padding-right: 0.5rem;">
+                <div id="logs-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+                <div id="no-logs" style="text-align: center; padding: 3rem; color: var(--text-muted); display: none;">
+                    <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p>No daily logs yet. Start tracking your crop progress!</p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Questionnaire Wizard -->
+        <div id="wizard-box" class="wizard-container">
+            <h2 class="question-title" style="text-align: center; margin-bottom: 2rem;" data-i18n="al_setup_title">Farm
+                Setup</h2>
+            <div class="step-indicator" id="wizard-indicator">
+                <div class="step-dot active"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+            </div>
+
+            <form id="alert-form">
+                <!-- Question 1: Crop -->
+                <div class="wizard-step active" data-step="1">
+                    <h2 class="question-title" data-i18n="al_setup_q1_title">1. What crop are you growing?</h2>
+                    <p class="question-subtitle" data-i18n="al_setup_q1_desc">Tell us what you're cultivating this
+                        season.</p>
+                    <select class="form-input" name="crop" required style="height: 4rem; font-size: 1.2rem;">
+                        <option value="">Select Crop...</option>
+                        <option value="Rice">Rice (Paddy)</option>
+                        <option value="Wheat">Wheat</option>
+                        <option value="Tomato">Tomato</option>
+                        <option value="Potato">Potato</option>
+                        <option value="Maize">Maize (Corn)</option>
+                        <option value="Cotton">Cotton</option>
+                        <option value="Chilli">Chilli / Pepper</option>
+                    </select>
+                </div>
+
+                <!-- Question 2: Soil -->
+                <div class="wizard-step" data-step="2">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <h2 class="question-title" style="margin-bottom: 0;" data-i18n="al_setup_q2_title">2. What type
+                            of
+                            soil do you have?</h2>
+                        <button type="button" onclick="document.getElementById('soil-guide-modal').style.display='flex'"
+                            style="background: none; border: none; color: var(--primary); font-weight: 700; cursor: pointer; font-size: 0.9rem;">
+                            <i class="fas fa-question-circle"></i> <span data-i18n="fert_label_soil_help">Help me
+                                identify</span>
+                        </button>
+                    </div>
+                    <p class="question-subtitle" data-i18n="al_setup_q2_desc">Soil type determines water and nutrient
+                        retention.</p>
+                    <div class="opt-grid">
+                        <div class="opt-card" data-val="Black">Black Soil</div>
+                        <div class="opt-card" data-val="Red">Red Soil</div>
+                        <div class="opt-card" data-val="Sandy">Sandy Soil</div>
+                        <div class="opt-card" data-val="Loamy">Loamy Soil</div>
+                    </div>
+                    <input type="hidden" name="soil" required>
+                </div>
+
+                <!-- Question 3: Stage -->
+                <div class="wizard-step" data-step="3">
+                    <h2 class="question-title" data-i18n="al_setup_q3_title">3. What stage is your crop in?</h2>
+                    <p class="question-subtitle" data-i18n="al_setup_q3_desc">This helps us set the baseline for your
+                        timeline.</p>
+                    <select class="form-input" name="growth_stage" required style="height: 4rem; font-size: 1.2rem;">
+                        <option value="Establishment">Seedling / Establishment</option>
+                        <option value="Vegetative">Vegetative Growth</option>
+                        <option value="Flowering">Flowering Stage</option>
+                        <option value="Maturity">Maturity Stage</option>
+                    </select>
+                    <!-- Hidden necessities for the engine -->
+                    <input type="hidden" name="sowing_date" id="auto_sowing_date">
+                </div>
+
+                <!-- Question 4: Problems -->
+                <div class="wizard-step" data-step="4">
+                    <h2 class="question-title" data-i18n="al_setup_q4_title">4. Are you noticing any problems?</h2>
+                    <p class="question-subtitle" data-i18n="al_setup_q4_desc">Select any issues you've seen recently.
+                    </p>
+                    <select class="form-input" name="problems" required style="height: 4rem; font-size: 1.2rem;">
+                        <option value="None">Everything looks healthy</option>
+                        <option value="Yellowing">Yellowing of leaves</option>
+                        <option value="Stunted">Stunted / Slow growth</option>
+                        <option value="Pests">Insect or pest activity</option>
+                        <option value="Water Stress">Wilting / Dryness</option>
+                    </select>
+                </div>
+
+                <!-- Question 5: Acres -->
+                <div class="wizard-step" data-step="5">
+                    <h2 class="question-title" data-i18n="al_setup_q5_title">5. How many acres are you cultivating?</h2>
+                    <p class="question-subtitle" data-i18n="al_setup_q5_desc">Used to calculate total fertilizer and
+                        water needs.</p>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <input type="number" name="acres" class="form-input" placeholder="1" min="0.1" step="0.1"
+                            value="1" style="flex: 1; height: 4rem; font-size: 1.2rem;" required>
+                        <span style="font-weight: 700; color: var(--text-dark);">Acres</span>
+                    </div>
+
+                    <!-- Hidden necessities for the engine -->
+                    <input type="hidden" name="state" value="Other">
+                    <input type="hidden" name="district" value="Default">
+                    <input type="hidden" name="water" value="Borewell">
+                    <input type="hidden" name="farming_style" value="Chemical">
+                    <input type="hidden" name="method" value="Direct">
+                    <input type="hidden" name="land" value="Upland">
+                    <input type="hidden" name="weather_sync" value="Yes">
+                </div>
+
+                <div class="wizard-nav">
+                    <button type="button" id="prev-btn" class="btn btn-secondary"
+                        style="opacity: 0; pointer-events: none;" data-i18n="wizard_back">Back</button>
+                    <button type="button" id="next-btn" class="btn" data-i18n="wizard_next">Next Step</button>
+                    <button type="submit" id="submit-btn" class="btn" style="display: none;"
+                        data-i18n="al_btn_activate">Activate Alerts 💚</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Alert Results View -->
+        <div id="alert-results-container">
+            <div id="alert-results" class="timeline">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Soil Identification Guide Modal -->
+    <div id="soil-guide-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2100; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="card"
+            style="max-width: 600px; padding: 2.5rem; position: relative; max-height: 90vh; overflow-y: auto;">
+            <button onclick="document.getElementById('soil-guide-modal').style.display='none'"
+                style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 1rem;" data-i18n="soil_guide_title">
+                Soil Texture Check
+            </h3>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="soil_guide_desc">
+                The easiest way to check your soil is the "Squeeze Test". Dampen a handful of soil and squeeze it
+                firmly.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #fffbeb; border-radius: var(--radius-md); border-left: 4px solid #f59e0b; cursor: pointer;"
+                    onclick="selectSoilFromGuide('Sandy')">
+                    <i class="fas fa-boxes-stacked" style="font-size: 1.5rem; color: #d97706; margin-top: 5px;"></i>
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_sandy_title">Gritty & Loose (Sandy)
+                        </h4>
+                        <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_sandy_desc">If it feels
+                            gritty and doesn't form a ball (falls apart), it is Sandy soil.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #f0fdf4; border-radius: var(--radius-md); border-left: 4px solid var(--primary); cursor: pointer;"
+                    onclick="selectSoilFromGuide('Loamy')">
+                    <i class="fas fa-mountain-sun"
+                        style="font-size: 1.5rem; color: var(--primary); margin-top: 5px;"></i>
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_loam_title">Soft & Crumbly (Loam)</h4>
+                        <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_loam_desc">If it forms a
+                            ball that crumbles when poked, it is Loamy. Best for most crops.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #f8fafc; border-radius: var(--radius-md); border-left: 4px solid #475569; cursor: pointer;"
+                    onclick="selectSoilFromGuide('Clayey')">
+                    <i class="fas fa-layer-group" style="font-size: 1.5rem; color: #475569; margin-top: 5px;"></i>
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_clay_title">Sticky & Firm (Clay)</h4>
+                        <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_clay_desc">If it forms a
+                            tight, sticky ball that doesn't break easily, it is Clay soil.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; text-align: center;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Not sure? Red or Black
+                    soil? Select colors from the list.</p>
+                <button onclick="selectSoilFromGuide('Loamy')" class="btn btn-outline"
+                    style="width: 100%; border-style: dashed;" data-i18n="soil_guide_btn_use">
+                    Use Balanced Default (Loamy)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer style="padding: 4rem 0; border-top: 1px solid #f1f5f9; text-align: center;">
+        <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <p data-i18n="footer_text">Where Nature Meets Intelligence.</p>
+    </footer>
+
+    <script id="locations-data" type="application/json">{{ locations | tojson | safe }}</script>
+    <script id="alert-settings-data" type="application/json">{{ alert_settings | tojson | safe }}</script>
+    <script id="answered-today-data" type="application/json">{{ answered_today | tojson | safe }}</script>
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const steps = document.querySelectorAll('.wizard-step');
+        const dots = document.querySelectorAll('.step-dot');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const alertForm = document.getElementById('alert-form');
+        const wizardBox = document.getElementById('wizard-box');
+        const alertResults = document.getElementById('alert-results');
+
+        // New Elements
+        const dailyBox = document.getElementById('daily-checkin-box');
+        const dailyForm = document.getElementById('daily-form');
+        const changeCropModal = document.getElementById('change-crop-modal');
+        const dailyStatusInput = document.getElementById('daily_status_input');
+
+        let currentStep = 1;
+        let allLogs = {}; // Store all logs for filtering
+
+        // Load data from template
+        const savedSettings = JSON.parse(document.getElementById('alert-settings-data').textContent);
+        const answeredToday = JSON.parse(document.getElementById('answered-today-data').textContent);
+
+        // Initialization
+        if (savedSettings && Object.keys(savedSettings).length > 0) {
+            wizardBox.style.display = 'none';
+            document.getElementById('page-title').textContent = 'Your Farming Schedule';
+            document.getElementById('page-subtitle').textContent = 'Live alerts based on your crop growth and conditions.';
+
+            if (!answeredToday) {
+                dailyBox.style.display = 'block';
+                if (savedSettings.crop) {
+                    document.getElementById('daily-subtitle').textContent = `How is your ${savedSettings.crop} looking today?`;
+                    document.getElementById('page-subtitle').textContent = `Live alerts for your ${savedSettings.crop}.`;
+
+                    // Show Status Bar
+                    document.getElementById('crop-status-bar').style.display = 'flex';
+                    document.getElementById('status-crop-name').textContent = savedSettings.crop;
+                }
+            } else {
+                loadAlerts(savedSettings);
+                if (savedSettings.crop) {
+                    document.getElementById('crop-status-bar').style.display = 'flex';
+                    document.getElementById('status-crop-name').textContent = savedSettings.crop;
+                }
+            }
+        }
+
+        function updateSteps() {
+            steps.forEach(s => s.classList.remove('active'));
+            const currentStepEl = document.querySelector(`[data-step="${currentStep}"]`);
+            if (currentStepEl) currentStepEl.classList.add('active');
+
+            const wizardIndicator = document.getElementById('wizard-indicator');
+            if (wizardIndicator) {
+                const wizardDots = wizardIndicator.querySelectorAll('.step-dot');
+                wizardDots.forEach((d, idx) => {
+                    d.classList.toggle('active', idx < currentStep);
+                });
+            }
+
+            prevBtn.style.opacity = currentStep === 1 ? '0' : '1';
+            prevBtn.style.pointerEvents = currentStep === 1 ? 'none' : 'auto';
+
+            if (currentStep === 5) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
+            const currentStepEl = document.querySelector(`[data-step="${currentStep}"]`);
+            const inputs = currentStepEl.querySelectorAll('input:not([type="hidden"]), select');
+            let valid = true;
+
+            inputs.forEach(i => {
+                if (i.hasAttribute('required') && !i.value) {
+                    valid = false;
+                    i.style.borderColor = '#ef4444';
+                    i.classList.add('shake');
+                    setTimeout(() => i.classList.remove('shake'), 400);
+                } else {
+                    i.style.borderColor = '';
+                }
+            });
+
+            // Special check for soil (hidden input with cards)
+            if (currentStep === 2) {
+                const soilInput = currentStepEl.querySelector('input[name="soil"]');
+                if (!soilInput.value) {
+                    valid = false;
+                    const grid = currentStepEl.querySelector('.opt-grid');
+                    grid.style.padding = '5px';
+                    grid.style.borderRadius = '10px';
+                    grid.style.border = '2px solid #ef4444';
+                    grid.classList.add('shake');
+                    setTimeout(() => {
+                        grid.classList.remove('shake');
+                        grid.style.border = '';
+                    }, 400);
+                }
+            }
+
+            if (valid) {
+                currentStep++;
+                updateSteps();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            currentStep--;
+            updateSteps();
+        });
+
+        // Daily Check-in Logic
+        let currentDailyStep = 1;
+        const dailyNext = document.getElementById('daily-next');
+        const dailyPrev = document.getElementById('daily-prev');
+        const dailySubmit = document.getElementById('daily-submit-btn');
+        const dailyStepDots = document.getElementById('daily-step-dots').querySelectorAll('.step-dot');
+
+        function updateDailySteps() {
+            document.querySelectorAll('.daily-step').forEach(s => s.style.display = 'none');
+            document.getElementById(`daily-step-${currentDailyStep}`).style.display = 'block';
+
+            dailyStepDots.forEach((d, idx) => {
+                if (idx < currentDailyStep) d.classList.add('active');
+                else d.classList.remove('active');
+            });
+
+            dailyPrev.style.visibility = currentDailyStep === 1 ? 'hidden' : 'visible';
+
+            if (currentDailyStep === 3) {
+                dailyNext.style.display = 'none';
+                dailySubmit.style.display = 'block';
+            } else {
+                dailyNext.style.display = 'block';
+                dailySubmit.style.display = 'none';
+            }
+        }
+
+        dailyNext.addEventListener('click', () => {
+            const currentEl = document.getElementById(`daily-step-${currentDailyStep}`);
+            const input = currentEl.querySelector('select, textarea, input');
+            if (input && input.hasAttribute('required') && !input.value) {
+                input.style.borderColor = '#ef4444';
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 400);
+                return;
+            }
+            if (input) input.style.borderColor = '';
+            currentDailyStep++;
+            updateDailySteps();
+        });
+
+        dailyPrev.addEventListener('click', () => {
+            currentDailyStep--;
+            updateDailySteps();
+        });
+
+        // Option Card Selection
+        document.querySelectorAll('.opt-card').forEach(card => {
+            card.addEventListener('click', function () {
+                const parent = this.parentElement;
+                parent.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+
+                const hiddenInput = parent.nextElementSibling;
+                if (hiddenInput && hiddenInput.tagName === 'INPUT') {
+                    hiddenInput.value = this.dataset.val;
+                }
+            });
+        });
+
+        // Wizard Submission
+        alertForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Auto sowing date calculation based on stage
+            const stage = document.getElementsByName('growth_stage')[0].value;
+            let offset = 0;
+            if (stage === 'Vegetative') offset = 30;
+            else if (stage === 'Flowering') offset = 60;
+            else if (stage === 'Maturity') offset = 95;
+
+            const date = new Date();
+            date.setDate(date.getDate() - offset);
+            document.getElementById('auto_sowing_date').value = date.toISOString().split('T')[0];
+
+            const formData = new FormData(alertForm);
+            const data = Object.fromEntries(formData);
+
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save_and_generate', settings: data })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    location.reload(); // Reload to show alerts
+                }
+            } catch (error) { console.error(error); submitBtn.disabled = false; }
+        });
+
+        // Daily Form Submission
+        dailyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+
+            const formData = new FormData(dailyForm);
+            const stage = formData.get('growth_stage');
+            const problems = formData.get('problems');
+            const status = formData.get('daily_status');
+            const note = formData.get('daily_note');
+
+            // Final Validation
+            let valid = true;
+            if (!status) {
+                const statusGrid = document.querySelector('.status-grid');
+                statusGrid.style.borderColor = '#ef4444';
+                statusGrid.classList.add('shake');
+                setTimeout(() => {
+                    statusGrid.classList.remove('shake');
+                    statusGrid.style.borderColor = '';
+                }, 400);
+                valid = false;
+            }
+
+            if (!valid) return;
+            btn.disabled = true;
+
+            // Comprehensive log entry
+            let answer = `${status} | Stage: ${stage} | Problems: ${problems}`;
+            if (note) answer += ` | Note: ${note}`;
+
+            // Update local settings too (crucial!)
+            savedSettings.growth_stage = stage;
+            savedSettings.problems = problems;
+
+            try {
+                await fetch('/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save_daily', answer: answer })
+                });
+
+                // Re-save settings to persistent storage
+                await fetch('/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save_and_generate', settings: savedSettings })
+                });
+
+                dailyBox.style.display = 'none';
+                changeCropModal.style.display = 'block';
+            } catch (error) { console.error(error); btn.disabled = false; }
+        });
+
+        async function handleCropChange(shouldChange) {
+            if (shouldChange) {
+                await fetch('/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'reset_settings' })
+                });
+                window.location.reload();
+            } else {
+                location.reload();
+            }
+        }
+
+        async function loadAlerts(settings) {
+            const resultsBox = document.getElementById('alert-results-container');
+            resultsBox.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+            try {
+                const response = await fetch('/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'generate', settings: settings })
+                });
+                const result = await response.json();
+                resultsBox.innerHTML = '<div id="alert-results" class="timeline"></div>';
+                displayAlerts(result.alerts);
+            } catch (e) { console.error(e); }
+        }
+
+        function displayAlerts(alerts) {
+            const el = document.getElementById('alert-results');
+            if (alerts.length === 0) {
+                el.innerHTML = '<div style="text-align: center; padding: 4rem;"><h3>Everything is up to date! Check back tomorrow.</h3></div>';
+                return;
+            }
+            el.style.display = 'block';
+            el.style.opacity = '1';
+            el.innerHTML = alerts.map((a, idx) => `
+                <div class="alert-item" style="animation-delay: ${idx * 0.1}s">
+                    <div class="alert-icon" style="border-color: ${a.color}"><i class="${a.icon}" style="color: ${a.color}"></i></div>
+                    <div class="alert-card">
+                        <div class="alert-time" style="color: ${a.color}">${a.time_label}</div>
+                        <div style="font-weight: 800; font-size: 1.2rem; margin: 0.25rem 0; color: var(--text-dark);">${a.title}</div>
+                        <div class="alert-desc">${a.desc}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function toggleUpdatesDashboard() {
+            const dashboard = document.getElementById('updates-dashboard');
+            const currentDisplay = window.getComputedStyle(dashboard).display;
+
+            if (currentDisplay === 'none') {
+                dashboard.style.display = 'block';
+                wizardBox.style.display = 'none';
+                document.getElementById('alert-results-container').style.display = 'none';
+                dailyBox.style.display = 'none';
+
+                // Fetch and show logs
+                const list = document.getElementById('logs-list');
+                list.innerHTML = '<div style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading your logs...</p></div>';
+
+                try {
+                    const res = await fetch('/alerts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'get_daily_logs' })
+                    });
+                    const data = await res.json();
+                    allLogs = data.logs || {};
+                    displayLogs(allLogs);
+                } catch (err) {
+                    console.error(err);
+                    list.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 2rem;">Failed to load logs. Please refresh.</div>';
+                }
+            } else {
+                dashboard.style.display = 'none';
+                if (!answeredToday) {
+                    dailyBox.style.display = 'block';
+                } else if (savedSettings && Object.keys(savedSettings).length > 0) {
+                    document.getElementById('alert-results-container').style.display = 'block';
+                } else {
+                    wizardBox.style.display = 'block';
+                }
+            }
+        }
+
+        // Filtering logic
+        function filterLogs() {
+            const query = document.getElementById('search-logs').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+
+            const filtered = {};
+            Object.entries(allLogs).forEach(([date, log]) => {
+                const matchesSearch = log.toLowerCase().includes(query) || date.includes(query);
+
+                let matchesStatus = true;
+                if (statusFilter === 'Healthy') matchesStatus = log.includes('Healthy');
+                else if (statusFilter === 'Issues') matchesStatus = log.includes('Struggling') || log.includes('Diseased') || log.includes('Pests') || log.includes('Yellowing') || log.includes('Water Stress');
+                else if (statusFilter === 'Harvested') matchesStatus = log.includes('Harvested');
+
+                if (matchesSearch && matchesStatus) {
+                    filtered[date] = log;
+                }
+            });
+            displayLogs(filtered);
+        }
+
+        document.getElementById('search-logs').addEventListener('input', filterLogs);
+        document.getElementById('filter-status').addEventListener('change', filterLogs);
+
+        function displayLogs(logs) {
+            const list = document.getElementById('logs-list');
+            const entries = Object.entries(logs).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+
+            // Calculate Stats
+            let total = entries.length;
+            let healthy = 0;
+            let issues = 0;
+            let streak = 0;
+
+            // Stats update logic
+            entries.forEach(([date, log]) => {
+                if (log.includes('Healthy')) healthy++;
+                else issues++;
+            });
+
+            // Streak calculation - Using robust local date keys
+            const getLocalKey = (d) => {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
+
+            let checkDate = new Date();
+            while (true) {
+                const dayStr = getLocalKey(checkDate);
+                if (logs[dayStr]) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+
+            document.getElementById('total-logs').textContent = total;
+            document.getElementById('healthy-days').textContent = healthy;
+            document.getElementById('issue-days').textContent = issues;
+            document.getElementById('current-streak').textContent = streak;
+
+            if (total === 0) {
+                document.getElementById('no-logs').style.display = 'block';
+                list.innerHTML = '';
+                return;
+            }
+            document.getElementById('no-logs').style.display = 'none';
+            list.innerHTML = entries.map(([date, log]) => {
+                const parts = log.split('|').map(x => x.trim());
+                const status = parts[0] || 'Report';
+
+                // Flexible parsing
+                let stageStr = "General update";
+                let probStr = "No issues noted";
+                let noteStr = "";
+
+                parts.forEach(p => {
+                    if (p.startsWith('Stage:')) stageStr = p.replace('Stage:', '').trim();
+                    else if (p.startsWith('Problems:')) probStr = p.replace('Problems:', '').trim();
+                    else if (p.startsWith('Note:')) noteStr = p.replace('Note:', '').trim();
+                    else if (p !== status && !stageStr.includes(p)) {
+                        if (stageStr === "General update") stageStr = p;
+                    }
+                });
+
+                let color = status.includes('Healthy') ? '#10b981' : (status.includes('Pests') || status.includes('Diseased') || status.includes('Struggling') ? '#ef4444' : '#6366f1');
+
+                return `
+                    <div style="background: white; padding: 1.25rem; border-radius: 12px; margin-bottom: 1rem; border-left: 6px solid ${color}; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); animation: fadeInUp 0.4s ease-out;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 800; color: ${color}; text-transform: uppercase; font-size: 0.85rem;">${status}</span>
+                            <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">${date}</span>
+                        </div>
+                        <div style="font-size: 0.95rem; margin-top: 0.5rem; color: #1e293b; font-weight: 700;">
+                            ${stageStr} <span style="font-weight: 400; color: #94a3b8; margin: 0 0.5rem;">•</span> <span style="font-style: italic; color: #64748b; font-weight: 500;">${probStr}</span>
+                        </div>
+                        ${noteStr ? `<div style="font-size: 0.85rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; margin-top: 0.75rem; color: #475569; border: 1px solid #f1f5f9;">${noteStr}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            updateTimelineChart(logs);
+        }
+
+        let updatesChartInstance = null;
+        function updateTimelineChart(logs) {
+            const ctx = document.getElementById('updatesChart');
+            if (!ctx) return;
+
+            let h = 0, i = 0, hr = 0;
+            Object.values(logs).forEach(log => {
+                if (log.includes('Healthy')) h++;
+                else if (log.includes('Harvested')) hr++;
+                else i++;
+            });
+
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const dataObj = {
+                labels: [
+                    translations[lang]['dis_healthy'] || 'Healthy',
+                    translations[lang]['dis_affected'] || 'Issues',
+                    translations[lang]['al_harvested'] || 'Harvested'
+                ],
+                datasets: [{
+                    data: [h, i, hr],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            };
+
+            if (updatesChartInstance) {
+                updatesChartInstance.data = dataObj;
+                updatesChartInstance.update();
+            } else {
+                updatesChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: dataObj,
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right' }
+                        }
+                    }
+                });
+            }
+        }
+
+
+        function selectSoilFromGuide(soilType) {
+            const cards = document.querySelectorAll('.wizard-step[data-step="2"] .opt-card');
+            const targetCard = Array.from(cards).find(c => c.textContent.includes(soilType));
+            if (targetCard) {
+                targetCard.click();
+            }
+            document.getElementById('soil-guide-modal').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

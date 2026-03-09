@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seasonal Guide - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .season-list {
+            margin-top: 1.5rem;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .season-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .season-list li i {
+            color: var(--primary);
+            font-size: 0.8rem;
+        }
+
+        .season-time {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: #f1f5f9;
+            color: var(--text-main);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/monthly-calendar">Monthly Guide</a>
+            <a href="/market-insights" data-i18n="nav_market">Market</a>
+            <a href="/profile"
+                style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center; transition: var(--transition);"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="hero" style="padding: 4rem 0 2rem;">
+            <div class="hero-badge">
+                <i class="fas fa-calendar-star" style="margin-right: 8px;"></i> Agricultural Cycles
+            </div>
+            <h1 style="font-size: 3.5rem;" data-i18n="sowing_seasons">Sowing Seasons.</h1>
+            <p data-i18n="plan_year">Plan your year with the traditional Indian agricultural calendar, optimized for
+                modern yields.</p>
+        </header>
+
+        <div class="grid">
+            <!-- Kharif -->
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-cloud-sun-rain"></i></div>
+                <div class="season-time" data-i18n="jun_oct">June – October</div>
+                <h3 style="font-family: 'Outfit';" data-i18n="season_kharif">Kharif Season</h3>
+                <p data-i18n="kharif_desc">Monsoon crops that thrive in high temperature and high moisture conditions.
+                </p>
+                <ul class="season-list">
+                    <li><i class="fas fa-check-circle"></i> Rice (Paddy)</li>
+                    <li><i class="fas fa-check-circle"></i> Maize & Sorghum</li>
+                    <li><i class="fas fa-check-circle"></i> Cotton & Jute</li>
+                    <li><i class="fas fa-check-circle"></i> Soybean & Groundnut</li>
+                    <li><i class="fas fa-check-circle"></i> Sugarcane</li>
+                </ul>
+            </div>
+
+            <!-- Rabi -->
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-snowflake"></i></div>
+                <div class="season-time" data-i18n="oct_mar">October – March</div>
+                <h3 style="font-family: 'Outfit';" data-i18n="season_rabi">Rabi Season</h3>
+                <p data-i18n="winter_climate">Winter crops sown after the monsoon rains have subsided, requiring cool
+                    climates.</p>
+                <ul class="season-list">
+                    <li><i class="fas fa-check-circle"></i> Wheat & Barley</li>
+                    <li><i class="fas fa-check-circle"></i> Mustard & Rapeseed</li>
+                    <li><i class="fas fa-check-circle"></i> Peas & Gram</li>
+                    <li><i class="fas fa-check-circle"></i> Potato & Tomato</li>
+                    <li><i class="fas fa-check-circle"></i> Onions</li>
+                </ul>
+            </div>
+
+            <!-- Zaid -->
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-sun"></i></div>
+                <div class="season-time">March – June</div>
+                <h3 style="font-family: 'Outfit';">Zaid Season</h3>
+                <p>Summer crops grown on irrigated lands during the short gap between Rabi and Kharif.</p>
+                <ul class="season-list">
+                    <li><i class="fas fa-check-circle"></i> Watermelon & Muskmelon</li>
+                    <li><i class="fas fa-check-circle"></i> Cucumber & Bitter Gourd</li>
+                    <li><i class="fas fa-check-circle"></i> Pumpkin</li>
+                    <li><i class="fas fa-check-circle"></i> Sunflower</li>
+                    <li><i class="fas fa-check-circle"></i> Seasonal Vegetables</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 4rem 0 6rem;">
+            <a href="/monthly-calendar" class="btn">
+                View Monthly Roadmap <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+                <i class="fas fa-leaf"></i> Green Eye
+            </div>
+            <p data-i18n="footer_text">Mastering the seasons for a better harvest.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+</body>
+
+</html>

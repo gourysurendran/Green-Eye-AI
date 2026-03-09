@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Seed Selection & Sowing - Green Eye</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="navbar container">
+        <div class="logo">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard">Home</a>
+            <a href="/tutorials" style="color: var(--primary-color);">Tutorials</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 900px;">
+        <div class="hero" style="padding: 2rem 0; text-align: left;">
+            <h1>Seed Selection & Sowing</h1>
+            <p>The journey of a thousand miles begins with a single step, or in farming, a single seed.</p>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+            <div class="card">
+                <h3><i class="fas fa-search"></i> Importance of Quality</h3>
+                <p>High-quality seeds are the catalyst for a successful harvest. They ensure:</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Better germination rates (90%+)</li>
+                    <li>Stronger immunity against early diseases</li>
+                    <li>Uniform plant growth and higher yield</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-check-double"></i> Selection Checklist</h3>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li style="margin-bottom: 0.5rem;"><i class="fas fa-certificate"
+                            style="color: var(--primary-light);"></i> <strong>Certified Seeds:</strong> Always prefer
+                        HYV (High Yielding Variety) certified by agencies.</li>
+                    <li style="margin-bottom: 0.5rem;"><i class="fas fa-tint" style="color: var(--primary-light);"></i>
+                        <strong>Moisture Content:</strong> Seeds should be dry (10-12% moisture).</li>
+                    <li style="margin-bottom: 0.5rem;"><i class="fas fa-ban" style="color: #d32f2f;"></i>
+                        <strong>Physical Purity:</strong> Avoid broken, shriveled, or weed-infested seeds.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tutorial-content card">
+            <h2><i class="fas fa-hand-holding-water" style="color: var(--primary-color);"></i> Sowing Methods</h2>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px;">
+                    <strong>Broadcasting:</strong><br>Scattering seeds by hand. Fast but uneven.
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px;">
+                    <strong>Dibbling:</strong><br>Placing seeds in holes at fixed intervals. Precise but
+                    labor-intensive.
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px;">
+                    <strong>Drilling:</strong><br>Using seed drills for uniform depth and spacing. Highly recommended.
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Rules of Thumb for Sowing:</h3>
+            <ul style="margin-top: 0.5rem; margin-left: 20px;">
+                <li><strong>Depth:</strong> Usually 2-3 times the size of the seed. Too deep = no germination. Too
+                    shallow = bird attack.</li>
+                <li><strong>Spacing:</strong> Give each plant room to breathe and access sunlight.</li>
+                <li><strong>Moisture:</strong> Soil must be moist at the time of sowing.</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="/tutorials/soil-preparation" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Previous</a>
+            <a href="/tutorials/watering-irrigation" class="btn">Next: Watering <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+
+</body>
+
+</html>

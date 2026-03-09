@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Chat - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--glass-shadow);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 700px;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            padding: 1.5rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: #fcfdfe;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.4s ease-out;
+            white-space: pre-wrap;
+        }
+
+        .message.bot {
+            background: white;
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .message.user {
+            background: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.2);
+        }
+
+        .chat-input-area {
+            padding: 1.5rem 2rem;
+            background: white;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 100px;
+            outline: none;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .chat-input-area input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+        }
+
+        .chat-input-area button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+            flex-shrink: 0;
+        }
+
+        .chat-input-area button.attach-btn {
+            background: #f1f5f9;
+            color: #64748b;
+            box-shadow: none;
+            width: 42px;
+            height: 42px;
+            font-size: 1.1rem;
+        }
+
+        .chat-input-area button.attach-btn:hover {
+            background: #e2e8f0;
+            transform: scale(1.05);
+        }
+
+        .chat-input-area button:hover {
+            transform: scale(1.1) rotate(10deg);
+        }
+
+        .message img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-top: 0.5rem;
+            display: block;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .message.bot img {
+            border: 2px solid #f1f5f9;
+        }
+
+        .typing-indicator {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 1rem 2rem;
+            font-weight: 600;
+            display: none;
+        }
+    </style>
+</head>
+
+<body data-farmer-id="{{ current_farmer_id or '' }}">
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/disease" data-i18n="nav_disease">Disease Detect</a>
+            <a href="/market-insights" data-i18n="nav_market">Market</a>
+            <a href="/profile" style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center;"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+            <a href="/logout" style="color: #ef4444;" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+            <select id="language-select" onchange="changeLanguage(this.value)"
+                style="padding: 8px 12px; border-radius: 50px; border: 1px solid #e2e8f0; background: white; font-weight: 600; cursor: pointer; outline: none;">
+                <option value="en">🇬🇧 English</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="ml">🌴 മലയാളം</option>
+            </select>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 3rem; padding-bottom: 6rem;">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div id="header-icon"
+                        style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <h3 id="header-name" style="margin:0; font-family: 'Outfit'; font-size:1.25rem;"
+                            data-i18n="chat_bot_name">
+                            Agri-Expert Bot</h3>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div id="status-dot"
+                                style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%;"></div>
+                            <small id="status-text" style="opacity:0.9; font-weight: 600;"
+                                data-i18n="chat_bot_active">Always
+                                Active</small>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="transferToExpert()" id="transfer-btn"
+                    style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-user-tie"></i> <span data-i18n="btn_talk_expert">Talk to Real Expert</span>
+                </button>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot" data-i18n="chat_bot_intro">
+                    Hello! I am your Green Eye AI assistant. Ask me anything about crops, plant diseases, or soil
+                    nutrients! 🌾
+                </div>
+            </div>
+
+            <div id="typing" class="typing-indicator" data-i18n="chat_typing">Bot is thinking...</div>
+
+            <div class="chat-input-area">
+                <button onclick="document.getElementById('image-upload').click()" class="attach-btn"
+                    title="Attach Image">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <input type="file" id="image-upload" style="display: none;" accept="image/*"
+                    onchange="handleImageUpload(event)">
+                <input type="text" id="user-input" data-i18n="chat_placeholder"
+                    placeholder="Ask your agricultural question here..." autocomplete="off">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <footer style="padding: 4rem 0; border-top: 1px solid #f1f5f9; text-align: center;">
+        <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <p data-i18n="footer_text">Where Nature Meets Intelligence.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const typingIndicator = document.getElementById('typing');
+
+        let isExpertMode = false;
+
+        function appendMessage(text, sender, imageUrl = null) {
+            const div = document.createElement('div');
+            div.classList.add('message', sender);
+
+            if (imageUrl) {
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                div.appendChild(img);
+            }
+
+            if (text) {
+                const textDiv = document.createElement('div');
+                if (sender === 'user') {
+                    textDiv.textContent = text;
+                } else {
+                    textDiv.innerHTML = text;
+                }
+                div.appendChild(textDiv);
+            }
+
+            chatMessages.appendChild(div);
+            // Smooth scroll
+            chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const imageUrl = e.target.result;
+                const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+
+                const uploadMsg = {
+                    'en': "Sent a photo of my crop.",
+                    'hi': "मैंने अपनी फसल की एक फोटो भेजी है।",
+                    'ml': "ഞാൻ എന്റെ കൃഷിയുടെ ഒരു ഫോട്ടോ അയച്ചിട്ടുണ്ട്."
+                };
+
+                appendMessage(uploadMsg[currentLang] || uploadMsg['en'], 'user', imageUrl);
+
+                // Bot response for image
+                typingIndicator.style.display = 'block';
+                setTimeout(() => {
+                    typingIndicator.style.display = 'none';
+
+                    if (isExpertMode) {
+                        const expertImageResponses = {
+                            'en': "I've received the photo. 🔍 Looking closely at the leaf texture and spots, this definitely requires attention. I'm comparing this with our local pathology database. Can you tell me if you've applied any fertilizer in the last 14 days?",
+                            'hi': "मुझे फोटो मिल गई है। 🔍 पत्तियों की बनावट और धब्बों को ध्यान से देखने पर, इस पर ध्यान देने की आवश्यकता है। मैं इसकी तुलना हमारे स्थानीय डेटाबेस से कर रहा हूँ। क्या आप मुझे बता सकते हैं कि क्या आपने पिछले 14 दिनों में कोई खाद डाली है?",
+                            'ml': "എനിക്ക് ഫോട്ടോ ലഭിച്ചു. 🔍 ഇലകളിലെ പാടുകൾ ശ്രദ്ധിച്ചതിൽ നിന്ന് ഇതിന് വിദഗ്ദ്ധ പരിശോധന ആവശ്യമാണെന്ന് മനസ്സിലാക്കുന്നു. ഞാൻ ഇത് ഞങ്ങളുടെ ഡാറ്റാബേസുമായി താരതമ്യം ചെയ്യുന്നു. കഴിഞ്ഞ രണ്ടാഴ്ചയ്ക്കുള്ളിൽ എന്തെങ്കിലും വളപ്രയോഗം നടത്തിയിരുന്നോ?"
+                        };
+                        appendMessage(expertImageResponses[currentLang] || expertImageResponses['en'], 'bot');
+                    } else {
+                        const imageResponses = {
+                            'en': "I've received your image. Let me analyze it... 🔍 This looks like it might be a nutrient deficiency or a fungal issue. I recommend using the **Disease Radar** tool for a high-precision scan, or I can connect you to Dr. Rajesh right now.",
+                            'hi': "मुझे आपकी फोटो मिल गई है। मुझे इसका विश्लेषण करने दें... 🔍 यह पोषक तत्वों की कमी या फंगल समस्या लग रही है। मैं उच्च-सटीक स्कैन के लिए **डिजीज रडार** टूल का उपयोग करने की सलाह देता हूँ, या मैं अभी आपको डॉ. राजेश से जोड़ सकता हूँ।",
+                            'ml': "നിങ്ങളുടെ ഫോട്ടോ എനിക്ക് ലഭിച്ചു. ഞാൻ ഇതൊന്ന് പരിശോധിക്കട്ടെ... 🔍 ഇത് പോഷകക്കുറവോ അല്ലെങ്കിൽ ഫംഗസ് ബാധയോ ആണെന്ന് തോന്നുന്നു. കൂടുതൽ കൃത്യമായ പരിശോധനയ്ക്കായി **ഡിസീസ് റഡാർ** ഉപയോഗിക്കാൻ ഞാൻ ശുപാർശ ചെയ്യുന്നു, അല്ലെങ്കിൽ എനിക്ക് നിങ്ങളെ ഡോ. രാജേഷുമായി ബന്ധിപ്പിക്കാൻ കഴിയും."
+                        };
+                        appendMessage(imageResponses[currentLang] || imageResponses['en'], 'bot');
+                    }
+                }, 2000);
+            };
+            reader.readAsDataURL(file);
+
+            // Reset input
+            event.target.value = '';
+        }
+
+        function transferToExpert() {
+            if (isExpertMode) return;
+
+            isExpertMode = true; // Set immediately 
+            const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+            const transferMsg = translations[currentLang]?.['chat_expert_transfer'] || "Transferring you to a Senior Agricultural Consultant...";
+
+            appendMessage(`<i class="fas fa-info-circle"></i> <i>${transferMsg}</i>`, 'bot');
+
+            // Disable interactions during transfer
+            document.getElementById('transfer-btn').style.opacity = '0.5';
+            document.getElementById('transfer-btn').style.pointerEvents = 'none';
+            userInput.disabled = true;
+
+            setTimeout(() => {
+                document.getElementById('header-icon').innerHTML = '<i class="fas fa-user-tie"></i>';
+                document.getElementById('header-icon').style.background = 'rgba(255,255,255,0.3)';
+                document.getElementById('header-name').textContent = "Dr. Rajesh Kumar (Expert)";
+                document.getElementById('header-name').removeAttribute('data-i18n');
+                document.getElementById('status-text').textContent = "Senior Agronomist · Online";
+                document.getElementById('status-text').removeAttribute('data-i18n');
+                document.getElementById('status-dot').style.background = '#4ade80';
+
+                userInput.disabled = false;
+                userInput.focus();
+
+                const welcomeMsg = {
+                    'en': "Hello, I am Dr. Rajesh. I've reviewed your request. I specialize in crop pathology and soil health. How can I assist you with your specific farming challenges today?",
+                    'hi': "नमस्ते, मैं डॉ. राजेश हूँ। मैंने आपका अनुरोध देखा है। मैं फसल रोग विज्ञान और मिट्टी के स्वास्थ्य में विशेषज्ञ हूँ। आज मैं आपकी विशिष्ट खेती की चुनौतियों में आपकी कैसे मदद कर सकता हूँ?",
+                    'ml': "ഹലോ, ഞാൻ ഡോ. രാജേഷ് ആണ്. നിങ്ങളുടെ അഭ്യർത്ഥന ഞാൻ പരിശോധിച്ചു. വിളരോഗങ്ങളിലും മണ്ണ് പരിശോധനയിലും ഞാൻ വിദഗ്ദ്ധനാണ്. ഇന്ന് നിങ്ങളുടെ കൃഷിയിലെ വെല്ലുവിളികളിൽ എനിക്ക് എങ്ങനെ സഹായിക്കാനാകും?"
+                };
+
+                appendMessage(welcomeMsg[currentLang] || welcomeMsg['en'], 'bot');
+            }, 2000);
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'user');
+            userInput.value = '';
+
+            typingIndicator.style.display = 'block';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+
+                const lowerText = text.toLowerCase();
+                const match = (keys) => keys.some(k => lowerText.includes(k));
+                const isGreeting = match(['hi', 'hello', 'hey', 'namaste', 'नमस्ते', 'ഹലോ']);
+                const hasDiagnosis = match(['diagnosed with', 'has been diagnosed', 'found in my', 'detected']);
+
+                if (isExpertMode) {
+                    if (isGreeting) {
+                        const expertGreetings = {
+                            'en': "Hello! How can I help you today? Please tell me what's happening on your farm.",
+                            'hi': "नमस्ते! मैं आज आपकी कैसे मदद कर सकता हूँ? कृपया मुझे बताएं कि आपके खेत में क्या हो रहा है।",
+                            'ml': "ഹലോ! എനിക്ക് ഇന്ന് നിങ്ങളെ എങ്ങനെ സഹായിക്കാനാകും? നിങ്ങളുടെ കൃഷിയിടത്തിൽ എന്താണ് സംഭവിക്കുന്നതെന്ന് ദയവായി പറയുക."
+                        };
+                        appendMessage(expertGreetings[currentLang] || expertGreetings['en'], 'bot');
+                        return;
+                    }
+
+                    if (hasDiagnosis) {
+                        const diagnosticFollowup = {
+                            'en': "I'm sorry to hear that. I've successfully received your scan diagnosis. To give you a personalized recovery plan, what is the current weather like in your area? (Humid/Dry?)",
+                            'hi': "यह सुनकर दुख हुआ। मुझे आपका स्कैन निदान मिल गया है। आपको एक व्यक्तिगत रिकवरी प्लान देने के लिए, आपके क्षेत्र में वर्तमान मौसम कैसा है? (नमी वाला/सूखा?)",
+                            'ml': "അക്കാര്യം അറിഞ്ഞതിൽ വിഷമമുണ്ട്. നിങ്ങളുടെ സ്കാൻ റിപ്പോർട്ട് എനിക്ക് ലഭിച്ചു. നിങ്ങൾക്ക് കൃത്യമായ പോംവഴികൾ പറഞ്ഞുതരുന്നതിന്, നിങ്ങളുടെ അവിടെ ഇപ്പോൾ എങ്ങനെയുള്ള കാലാവസ്ഥയാണ്? (ഈർപ്പമുള്ളതാണോ/വരണ്ടതാണോ?)"
+                        };
+                        appendMessage(diagnosticFollowup[currentLang] || diagnosticFollowup['en'], 'bot');
+                        return;
+                    }
+
+                    const expertResponses = {
+                        'en': [
+                            "That's a specific observation. To give you the best advice, could you tell me your soil type and current moisture levels?",
+                            "I see. This often happens due to specific pest activity or environmental stress. Have you noticed any changes in the leaf color recently?",
+                            "Based on your description, I recommend an immediate soil test. In the meantime, ensure the drainage is clear.",
+                            "This sounds like a localized issue. Can you check if other farmers in your area are facing the same problem?"
+                        ],
+                        'hi': [
+                            "यह एक विशिष्ट अवलोकन है। आपको सबसे अच्छी सलाह देने के लिए, क्या आप मुझे अपनी मिट्टी का प्रकार और वर्तमान नमी का स्तर बता सकते हैं?",
+                            "मैं समझता हूँ। यह अक्सर विशेष कीटों की गतिविधि या पर्यावरणीय तनाव के कारण होता है। क्या आपने हाल ही में पत्तियों के रंग में कोई बदलाव देखा है?",
+                            "आपके विवरण के आधार पर, मैं तत्काल मिट्टी परीक्षण की सलाह देता हूँ। इस बीच, सुनिश्चित करें कि जल निकासी साफ है।",
+                            "यह एक स्थानीय समस्या लगती है। क्या आप जांच सकते हैं कि आपके क्षेत्र के अन्य किसान भी इसी समस्या का सामना कर रहे हैं?"
+                        ],
+                        'ml': [
+                            "ഇതൊരു പ്രത്യേക നിരീക്ഷണമാണ്. നിങ്ങൾക്ക് മികച്ച ഉപദേശം നൽകുന്നതിന്, നിങ്ങളുടെ മണ്ണിന്റെ തരവും നിലവിലെ ഈർപ്പവും എന്നോട് പറയാമോ?",
+                            "മനസ്സിലായി. പ്രത്യേക കീടങ്ങളുടെ ആക്രമണം അല്ലെങ്കിൽ കാലാവസ്ഥാ വ്യതിയാനം കാരണം ഇത് സംഭവിക്കാറുണ്ട്. ഇലകളുടെ നിറത്തിൽ എന്തെങ്കിലും മാറ്റം ശ്രദ്ധിച്ചോ?",
+                            "നിങ്ങളുടെ വിവരണം അനുസരിച്ച്, ഉടൻ തന്നെ മണ്ണ് പരിശോധന നടത്താൻ ഞാൻ ശുപാർശ ചെയ്യുന്നു. അതുവരെ വെള്ളം കെട്ടിക്കിടക്കുന്നില്ലെന്ന് ഉറപ്പാക്കുക.",
+                            "ഇതൊരു പ്രാദേശിക പ്രശ്നമാണെന്ന് തോന്നുന്നു. നിങ്ങളുടെ പ്രദേശത്തെ മറ്റ് കർഷകർക്കും ഇതേ പ്രശ്നമുണ്ടോ എന്ന് പരിശോധിക്കാമോ?"
+                        ]
+                    };
+                    const pool = expertResponses[currentLang] || expertResponses['en'];
+                    const randomResponse = pool[Math.floor(Math.random() * pool.length)];
+                    appendMessage(randomResponse, 'bot');
+                    return;
+                }
+
+                const botData = {
+                    'en': {
+                        'default': "That is a very important question. Based on our data, you should check our specialized tools for high-accuracy analysis. 🌾",
+                        'disease_found': "I see the diagnosis. It's important to act fast. Would you like to consult our **Senior Agronomist** for a detailed treatment plan? Click 'Talk to Real Expert' above.",
+                        'disease': "For accurate disease diagnosis, please use our AI scanner: <a href='/disease' style='color:var(--primary); font-weight:700;'>Disease Radar</a>. It analyzes leaf patterns with 95% accuracy.",
+                        'price': "Live market rates from AGMARKNET are available in the <a href='/market-insights' style='color:var(--primary); font-weight:700;'>Market Hub</a>.",
+                        'water': "Precision irrigation schedules can be managed here: <a href='/irrigation' style='color:var(--primary); font-weight:700;'>Smart Irrigation</a>.",
+                        'fertilizer': "To get accurate NPK recommendations, use the <a href='/fertilizer' style='color:var(--primary); font-weight:700;'>Nutrient Plan</a> tool.",
+                        'crop': "Our soil-specific crop advisor is located here: <a href='/crop-recommendation' style='color:var(--primary); font-weight:700;'>Smart Advisor</a>.",
+                        'tutorial': "You can find step-by-step masterclasses in our <a href='/tutorials' style='color:var(--primary); font-weight:700;'>Learning Hub</a>.",
+                        'weather': "Current weather and 7-day forecast are available on your <a href='/dashboard' style='color:var(--primary); font-weight:700;'>Dashboard</a>.",
+                        'help': "I'm here to help! You can ask about pests, prices, weather, or click 'Talk to Real Expert' for personal advice."
+                    },
+                    'hi': {
+                        'default': "यह बहुत महत्वपूर्ण प्रश्न है। हमारे डेटा के आधार पर, आपको उच्च-सटीक विश्लेषण के लिए हमारे विशेष उपकरणों की जाँच करनी चाहिए। 🌾",
+                        'disease_found': "मैं निदान देख सकता हूँ। तेजी से कार्य करना महत्वपूर्ण है। क्या आप विस्तृत उपचार योजना के लिए हमारे **वरिष्ठ कृषि विज्ञानी** से परामर्श करना चाहेंगे? ऊपर 'विशेषज्ञ से बात करें' पर क्लिक करें।",
+                        'disease': "सटीक रोग निदान के लिए, कृपया हमारे एआई स्कैनर का उपयोग करें: <a href='/disease' style='color:var(--primary); font-weight:700;'>डिजीज रडार</a>।",
+                        'price': "AGMARKNET की लाइव बाजार दरें <a href='/market-insights' style='color:var(--primary); font-weight:700;'>मार्केट हब</a> में उपलब्ध हैं।",
+                        'water': "सटीक सिंचाई कार्यक्रम यहाँ प्रबंधित किए जा सकते हैं: <a href='/irrigation' style='color:var(--primary); font-weight:700;'>स्मार्ट सिंचाई</a>।",
+                        'fertilizer': "सटीक एनपीके सिफारिशें प्राप्त करने के लिए, <a href='/fertilizer' style='color:var(--primary); font-weight:700;'>पोषक तत्व योजना</a> उपकरण का उपयोग करें।",
+                        'crop': "हमारा मिट्टी-विशिष्ट फसल सलाहकार यहाँ स्थित है: <a href='/crop-recommendation' style='color:var(--primary); font-weight:700;'>स्मार्ट सलाहकार</a>।",
+                        'tutorial': "आप हमारे <a href='/tutorials' style='color:var(--primary); font-weight:700;'>शिक्षा केंद्र</a> में चरण-दर-चरण मास्टरक्लास पा सकते हैं।",
+                        'weather': "वर्तमान मौसम और 7 दिनों का पूर्वानुमान आपके <a href='/dashboard' style='color:var(--primary); font-weight:700;'>डैशबोर्ड</a> पर उपलब्ध है।",
+                        'help': "मैं आपकी मदद के लिए यहाँ हूँ! आप कीटों, कीमतों, मौसम के बारे में पूछ सकते हैं, या व्यक्तिगत सलाह के लिए 'विशेषज्ञ से बात करें' पर क्लिक कर सकते हैं।"
+                    },
+                    'ml': {
+                        'default': "ഇതൊരു വളരെ പ്രധാനപ്പെട്ട ചോദ്യമാണ്. ഞങ്ങളുടെ ഡാറ്റ അടിസ്ഥാനമാക്കി, ഉയർന്ന കൃത്യതയുള്ള വിശകലനക്കായി ഞങ്ങളുടെ സ്പെഷ്യലൈസ്ഡ് ടൂളുകൾ പരിശോധിക്കുക. 🌾",
+                        'disease_found': "റിപ്പോർട്ട് ഞാൻ കണ്ടു. എത്രയും വേഗം മുൻകരുതൽ എടുക്കുന്നത് നന്നായിരിക്കും. ഇതിനെക്കുറിച്ച് കൂടുതൽ അറിയാൻ ഞങ്ങളുടെ **സീനിയർ അഗ്രോണമിസ്റ്റുമായി** സംസാരിക്കണോ? മുകളിൽ കാണുന്ന 'വിദഗ്ദ്ധനോട് സംസാരിക്കുക' ക്ലിക്ക് ചെയ്യുക.",
+                        'disease': "കൃത്യമായ രോഗനിർണ്ണയത്തിനായി, ദയവായി ഞങ്ങളുടെ AI സ്കാനർ ഉപയോഗിക്കുക: <a href='/disease' style='color:var(--primary); font-weight:700;'>ഡിസീസ് റഡാർ</a>.",
+                        'price': "AGMARKNET-ൽ നിന്നുള്ള തത്സമയ വിപണി നിരക്കുകൾ <a href='/market-insights' style='color:var(--primary); font-weight:700;'>മാർക്കറ്റ് ഹബ്ബിൽ</a> ലഭ്യമാണ്.",
+                        'water': "കൃത്യമായ നനയ്ക്കൽ ഷെഡ്യൂളുകൾ ഇവിടെ നിയന്ത്രിക്കാം: <a href='/irrigation' style='color:var(--primary); font-weight:700;'>സ്മാർട്ട് ഇററിഗേഷൻ</a>.",
+                        'fertilizer': "കൃത്യമായ വളപ്രയോഗ നിർദ്ദേശങ്ങൾക്കായി <a href='/fertilizer' style='color:var(--primary); font-weight:700;'>പോഷക പ്ലാൻ</a> ഉപകരണം ഉപയോഗിക്കുക.",
+                        'crop': "മണ്ണിന് അനുയോജ്യമായ വിള നിർദ്ദേശങ്ങൾ ഇവിടെ ലഭ്യമാണ്: <a href='/crop-recommendation' style='color:var(--primary); font-weight:700;'>സ്മാർട്ട് അഡ്വൈസർ</a>.",
+                        'tutorial': "ഞങ്ങളുടെ <a href='/tutorials' style='color:var(--primary); font-weight:700;'>പഠന കേന്ദ്രത്തിൽ</a> നിങ്ങൾക്ക് കൃഷിപാഠങ്ങൾ ലഭിക്കും.",
+                        'weather': "നിലവിലെ കാലാവസ്ഥയും 7 ദിവസത്തെ പ്രവചനവും നിങ്ങളുടെ <a href='/dashboard' style='color:var(--primary); font-weight:700;'>ഡാഷ്‍ബോർഡിൽ</a> ലഭ്യമാണ്.",
+                        'help': "സഹായിക്കാൻ ഞാൻ ഇവിടെയുണ്ട്! കീടങ്ങൾ, വിലകൾ, കാലാവസ്ഥ എന്നിവയെക്കുറിച്ച് ചോദിക്കാം, അല്ലെങ്കിൽ വിദഗ്ദ്ധോപദേശത്തിന് 'വിദഗ്ദ്ധനോട് സംസാരിക്കുക' ക്ലിക്ക് ചെയ്യാം."
+                    }
+                };
+
+                const langData = botData[currentLang] || botData['en'];
+                let response = langData['default'];
+
+                if (hasDiagnosis) {
+                    response = langData['disease_found'];
+                } else if (match(['growing', 'crop', 'management', 'tips', 'सलाह', 'നിർദ്ദേശങ്ങൾ'])) {
+                    // Smart context for users coming from Irrigation/Tips
+                    const tipsResponse = {
+                        'en': "I see you're looking for cultivation tips! For specific growth stages, ensure you follow the nitrogen schedule. Would you like a detailed plan from our expert?",
+                        'hi': "मुझे लगता है कि आप खेती के सुझाव ढूंढ रहे हैं! विशिष्ट विकास चरणों के लिए, नाइट्रोजन शेड्यूल का पालन करना सुनिश्चित करें। क्या आप हमारे विशेषज्ञ से विस्तृत योजना चाहेंगे?",
+                        'ml': "കൃഷി രീതികളെക്കുറിച്ചുള്ള അറിവുകൾക്കാണോ നോക്കുന്നത്? കൃത്യമായ ഇടവേളകളിൽ വളപ്രയോഗം നടത്താൻ ശ്രദ്ധിക്കുക. ഞങ്ങളുടെ വിദഗ്ദ്ധനിൽ നിന്ന് കൂടുതൽ വിവരങ്ങൾ വേണോ?"
+                    };
+                    response = tipsResponse[currentLang] || tipsResponse['en'];
+                } else if (isGreeting) {
+                    response = langData['help'];
+                } else if (match(['disease', 'sick', 'pest', 'rust', 'spot', 'rot', 'warn', 'बीमार', 'रोग', 'രോഗം', 'കേട്'])) {
+                    response = langData['disease'];
+                } else if (match(['price', 'market', 'mandi', 'sell', 'cost', 'भाव', 'कीमत', 'വില', 'മാർക്കറ്റ്'])) {
+                    response = langData['price'];
+                } else if (match(['water', 'irrigation', 'rain', 'dry', 'moist', 'drip', 'पानी', 'सिंचाई', 'വെള്ളം', 'നന'])) {
+                    response = langData['water'];
+                } else if (match(['fertilizer', 'npk', 'nutrient', 'urea', 'compost', 'खाद', 'വളം', 'പോഷകം'])) {
+                    response = langData['fertilizer'];
+                } else if (match(['recommend', 'plant', 'grow', 'soil', 'seed', 'फसल', 'मिट्टी', 'വിള', 'മണ്ണ്'])) {
+                    response = langData['crop'];
+                } else if (match(['learn', 'tutorial', 'how to', 'guide', 'teach', 'सीखें', 'പഠിക്കുക'])) {
+                    response = langData['tutorial'];
+                } else if (match(['weather', 'temp', 'forecast', 'sun', 'cloud', 'मौसम', 'കാലാവസ്ഥ'])) {
+                    response = langData['weather'];
+                } else if (match(['help', 'who', 'मदद', 'സഹായം'])) {
+                    response = langData['help'];
+                }
+
+                appendMessage(response, 'bot');
+            }, 1200);
+        }
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Auto-handle direct messages from widgets - Moved to bottom for safety
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const directMsg = urlParams.get('msg');
+            if (directMsg) {
+                // Small delay to ensure all components are stable
+                setTimeout(() => {
+                    if (userInput) {
+                        userInput.value = directMsg;
+                        sendMessage();
+                    }
+                }, 500);
+            }
+        });
+    </script>
+</body>
+
+</html>

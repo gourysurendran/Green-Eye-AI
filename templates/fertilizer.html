@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrient Analysis - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --status-low: #ef4444;
+            --status-adequate: #10b981;
+            --status-high: #f59e0b;
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 3rem;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        /* NPK Analysis Cards */
+        .npk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .npk-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--glass-shadow);
+            border: 2px solid #f1f5f9;
+            transition: all 0.3s ease;
+        }
+
+        .npk-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .npk-card.status-low {
+            border-color: var(--status-low);
+            background: linear-gradient(135deg, #fff 0%, #fef2f2 100%);
+        }
+
+        .npk-card.status-adequate {
+            border-color: var(--status-adequate);
+            background: linear-gradient(135deg, #fff 0%, #f0fdf4 100%);
+        }
+
+        .npk-card.status-high {
+            border-color: var(--status-high);
+            background: linear-gradient(135deg, #fff 0%, #fffbeb 100%);
+        }
+
+        .npk-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .npk-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .npk-icon {
+            font-size: 2rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-badge.low {
+            background: var(--status-low);
+            color: white;
+        }
+
+        .status-badge.adequate {
+            background: var(--status-adequate);
+            color: white;
+        }
+
+        .status-badge.high {
+            background: var(--status-high);
+            color: white;
+        }
+
+        .npk-levels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: var(--radius-md);
+        }
+
+        .level-item {
+            text-align: center;
+        }
+
+        .level-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .level-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .npk-info {
+            margin-bottom: 1rem;
+        }
+
+        .info-section {
+            margin-bottom: 1rem;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            padding-left: 1.5rem;
+        }
+
+        /* Fertilizer Recommendation Card */
+        .fertilizer-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
+        }
+
+        .fertilizer-name {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .fertilizer-ratio {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .application-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .application-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(10px);
+        }
+
+        .application-item-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .application-item-value {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* Soil Health Tips */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .tip-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--glass-shadow);
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .tip-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .tip-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .tip-icon {
+            font-size: 1.5rem;
+        }
+
+        .tip-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .tip-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 10px;
+            transition: width 1s ease-out;
+        }
+
+        .progress-fill.low {
+            background: var(--status-low);
+        }
+
+        .progress-fill.adequate {
+            background: var(--status-adequate);
+        }
+
+        .progress-fill.high {
+            background: var(--status-high);
+        }
+
+        /* Section Headers */
+        .section-header {
+            margin: 3rem 0 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body data-farmer-id="{{ current_farmer_id or '' }}">
+
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/disease" data-i18n="nav_disease">Disease Detect</a>
+            <a href="/market-insights" data-i18n="nav_market">Market</a>
+            <a href="/profile" style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center;"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+            <a href="/live-chat" data-i18n="nav_chat">Expert Chat</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 1200px;">
+        <header class="hero" style="padding: 4rem 0 2rem;">
+            <div class="hero-badge" data-i18n="card_fert_title">
+                <i class="fas fa-vial-circle-check" style="margin-right: 8px;"></i> Nutrient Analysis
+            </div>
+            <h1 style="font-size: 3.5rem;" data-i18n="card_fert_title">Smart Fertilizer Calculator</h1>
+            <p data-i18n="card_fert_desc">Get comprehensive NPK analysis and personalized fertilizer recommendations
+                for optimal crop nutrition.</p>
+        </header>
+
+        <!-- Mode Selector -->
+        <div style="display: flex; justify-content: center; margin-bottom: 3rem;">
+            <div
+                style="display: flex; background: #fff; padding: 0.5rem; border-radius: 100px; box-shadow: var(--glass-shadow); border: 1px solid #f1f5f9;">
+                <button id="mode-guided" class="btn"
+                    style="padding: 0.75rem 2rem; border-radius: 100px; box-shadow: none;" data-i18n="fert_btn_guided">
+                    <i class="fas fa-magic"></i> Guided Advisor
+                </button>
+                <button id="mode-pro" class="btn btn-outline"
+                    style="padding: 0.75rem 2rem; border-radius: 100px; border: none;" data-i18n="fert_btn_pro">
+                    <i class="fas fa-microscope"></i> Pro Mode (Lab Results)
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <section class="card"
+            style="padding: 3rem; margin-bottom: 2rem; min-height: 400px; display: flex; flex-direction: column;">
+            <!-- Guided Wizard UI -->
+            <div id="guided-wizard" style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
+                    <div id="wizard-steps-indicator" style="display: flex; gap: 0.5rem; flex: 1;">
+                        <div class="step-dot active"
+                            style="width: 20%; height: 6px; background: var(--primary); border-radius: 10px;"></div>
+                        <div class="step-dot"
+                            style="width: 20%; height: 6px; background: #e2e8f0; border-radius: 10px;"></div>
+                        <div class="step-dot"
+                            style="width: 20%; height: 6px; background: #e2e8f0; border-radius: 10px;"></div>
+                        <div class="step-dot"
+                            style="width: 20%; height: 6px; background: #e2e8f0; border-radius: 10px;"></div>
+                        <div class="step-dot"
+                            style="width: 20%; height: 6px; background: #e2e8f0; border-radius: 10px;"></div>
+                    </div>
+                </div>
+
+                <form id="wizard-form">
+                    <!-- Question 1: Crop -->
+                    <div class="wizard-step" id="step-1">
+                        <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 1rem;"
+                            data-i18n="wizard_fert_step_1_title">1. What crop are you
+                            growing?</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="wizard_fert_step_1_desc">
+                            Selecting your crop helps us
+                            understand specific nutrient requirements.</p>
+                        <select name="crop_type" id="wizard_crop" class="form-control"
+                            style="height: 4rem; font-size: 1.2rem;" required>
+                            <option value="" disabled selected data-i18n="fert_label_crop_select">Select your crop...
+                            </option>
+                            <option value="Maize" data-i18n="crop_maize">Maize</option>
+                            <option value="Sugarcane" data-i18n="crop_sugarcane">Sugarcane</option>
+                            <option value="Cotton" data-i18n="crop_cotton">Cotton</option>
+                            <option value="Tobacco" data-i18n="crop_tobacco">Tobacco</option>
+                            <option value="Paddy" data-i18n="crop_paddy">Paddy / Rice</option>
+                            <option value="Barley" data-i18n="crop_barley">Barley</option>
+                            <option value="Wheat" data-i18n="crop_wheat">Wheat</option>
+                            <option value="Millets" data-i18n="crop_millets">Millets</option>
+                            <option value="Oil seeds" data-i18n="crop_oil_seeds">Oil seeds</option>
+                            <option value="Pulses" data-i18n="crop_pulses">Pulses</option>
+                            <option value="Ground Nuts" data-i18n="crop_ground_nuts">Ground Nuts</option>
+                        </select>
+                    </div>
+
+                    <!-- Question 2: Soil -->
+                    <div class="wizard-step" id="step-2" style="display: none;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 0;"
+                                data-i18n="wizard_fert_step_2_title">2. What type of soil do
+                                you have?</h2>
+                            <button type="button"
+                                onclick="document.getElementById('soil-guide-modal').style.display='flex'"
+                                style="background: none; border: none; color: var(--primary); font-weight: 700; cursor: pointer; font-size: 0.9rem;">
+                                <i class="fas fa-question-circle"></i> <span data-i18n="fert_label_soil_help">Help me
+                                    identify</span>
+                            </button>
+                        </div>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="wizard_fert_step_2_desc">
+                            Soil texture affects how nutrients are
+                            retained and absorbed.</p>
+                        <select name="soil_type" id="wizard_soil" class="form-control"
+                            style="height: 4rem; font-size: 1.2rem;" required>
+                            <option value="" disabled selected data-i18n="fert_label_soil_select">Select soil type...
+                            </option>
+                            <option value="Sandy" data-i18n="wizard_soil_sandy">Sandy Soil</option>
+                            <option value="Loamy" data-i18n="wizard_soil_loamy">Loamy Soil</option>
+                            <option value="Black" data-i18n="wizard_soil_black">Black Soil</option>
+                            <option value="Red" data-i18n="wizard_soil_red">Red Soil</option>
+                            <option value="Clayey" data-i18n="wizard_soil_clayey">Clayey Soil</option>
+                        </select>
+                    </div>
+
+                    <!-- Question 3: Stage -->
+                    <div class="wizard-step" id="step-3" style="display: none;">
+                        <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 1rem;"
+                            data-i18n="wizard_fert_step_3_title">3. What stage is your
+                            crop in?</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="wizard_fert_step_3_desc">
+                            Nutrient needs change drastically
+                            throughout the growth cycle.</p>
+                        <select name="growth_stage" id="wizard_stage" class="form-control"
+                            style="height: 4rem; font-size: 1.2rem;" required>
+                            <option value="" disabled selected data-i18n="fert_label_stage_select">Select growth
+                                stage...</option>
+                            <option value="Sowing" data-i18n="fert_label_stage_sowing">Sowing / Initial</option>
+                            <option value="Vegetative" data-i18n="fert_label_stage_veg">Vegetative Growth</option>
+                            <option value="Flowering" data-i18n="fert_label_stage_flowering">Flowering Stage</option>
+                            <option value="Fruiting" data-i18n="fert_label_stage_fruiting">Fruiting / Ripening</option>
+                        </select>
+                    </div>
+
+                    <!-- Question 4: Problems -->
+                    <div class="wizard-step" id="step-4" style="display: none;">
+                        <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 1rem;"
+                            data-i18n="wizard_fert_step_4_title">4. Noticing any
+                            problems?</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="wizard_fert_step_4_desc">
+                            Visual symptoms often indicate a
+                            specific nutrient deficiency.</p>
+                        <select name="problems" id="wizard_problems" class="form-control"
+                            style="height: 4rem; font-size: 1.2rem;" required>
+                            <option value="None" data-i18n="fert_label_prob_none">No visible problems, looks healthy
+                            </option>
+                            <option value="Yellowing" data-i18n="fert_label_prob_yellow">Yellowing of leaves (Potential
+                                N deficiency)</option>
+                            <option value="Stunted" data-i18n="fert_label_prob_stunted">Stunted/Slow growth (Potential P
+                                deficiency)</option>
+                            <option value="Browning" data-i18n="fert_label_prob_brown">Browning leaf edges (Potential K
+                                deficiency)</option>
+                            <option value="Pests" data-i18n="fert_label_prob_pests">Pest or Insect attack</option>
+                        </select>
+                    </div>
+
+                    <!-- Question 5: Acres -->
+                    <div class="wizard-step" id="step-5" style="display: none;">
+                        <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 1rem;"
+                            data-i18n="wizard_fert_step_5_title">5. How many acres are
+                            you cultivating?</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="wizard_fert_step_5_desc">
+                            This allows us to calculate the exact
+                            total weight of fertilizer needed.</p>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <input type="number" name="acres" id="wizard_acres" class="form-control" placeholder="1"
+                                min="0.1" step="0.1" value="1" style="height: 4rem; font-size: 1.2rem; flex: 1;"
+                                required>
+                            <span style="font-weight: 700; color: var(--text-dark);"
+                                data-i18n="wizard_acres_label">Acres</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 3rem;">
+                        <button type="button" id="prev-step" class="btn btn-outline"
+                            style="visibility: hidden; padding: 0.75rem 2rem;">
+                            <i class="fas fa-chevron-left"></i> Back
+                        </button>
+                        <button type="button" id="next-step" class="btn" style="padding: 0.75rem 3rem;">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button type="submit" id="wizard-submit" class="btn"
+                            style="display: none; padding: 0.75rem 3rem;" data-i18n="fert_btn_get">
+                            Get Recommendation <i class="fas fa-wand-magic-sparkles"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Pro Mode Form (Hidden by default) -->
+            <form id="fertilizer-form" style="display: none;">
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--text-dark);"
+                        data-i18n="fert_label_lab_report">Soil Lab Report
+                        Details</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="fert_label_lab_desc">Enter the
+                        exact values from your soil
+                        testing report for maximum accuracy.</p>
+                </div>
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem; background: #f8fafc; padding: 2rem; border-radius: var(--radius-md);">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <label class="form-label" style="margin-bottom: 0;" data-i18n="wizard_soil_label">Soil
+                                Type</label>
+                            <button type="button"
+                                onclick="document.getElementById('soil-guide-modal').style.display='flex'"
+                                style="background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer; font-size: 0.75rem;">
+                                <span data-i18n="fert_label_soil_help">Help me identify</span>
+                            </button>
+                        </div>
+                        <select name="soil_type" id="soil_type" class="form-control" required>
+                            <option value="Sandy">Sandy Soil</option>
+                            <option value="Loamy">Loamy Soil</option>
+                            <option value="Black">Black Soil</option>
+                            <option value="Red">Red Soil</option>
+                            <option value="Clayey">Clayey Soil</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" data-i18n="wizard_crop_label">Crop Type</label>
+                        <select name="crop_type" id="crop_type" class="form-control" required>
+                            <option value="Maize">Maize</option>
+                            <option value="Sugarcane">Sugarcane</option>
+                            <option value="Cotton">Cotton</option>
+                            <option value="Tobacco">Tobacco</option>
+                            <option value="Paddy">Paddy / Rice</option>
+                            <option value="Barley">Barley</option>
+                            <option value="Wheat">Wheat</option>
+                            <option value="Millets">Millets</option>
+                            <option value="Oil seeds">Oil seeds</option>
+                            <option value="Pulses">Pulses</option>
+                            <option value="Ground Nuts">Ground Nuts</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div
+                    style="padding: 2rem; border: 1px dashed #e2e8f0; border-radius: var(--radius-md); margin-bottom: 2rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h4 style="font-family: 'Outfit';" data-i18n="fert_label_lab_readings">Lab Readings</h4>
+                        <button type="button" onclick="document.getElementById('value-help-modal').style.display='flex'"
+                            style="background: none; border: none; color: var(--secondary); font-weight: 700; cursor: pointer; font-size: 0.8rem;">
+                            <i class="fas fa-question-circle"></i> <span data-i18n="fert_label_help">Help</span>
+                        </button>
+                    </div>
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="fert_label_nitrogen">Nitrogen (N)</label>
+                            <input type="number" name="n" id="input_n" class="form-control" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="fert_label_phosphorus">Phosphorus (P)</label>
+                            <input type="number" name="p" id="input_p" class="form-control" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="fert_label_potassium">Potassium (K)</label>
+                            <input type="number" name="k" id="input_k" class="form-control" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="fert_label_moisture">Moisture (%)</label>
+                            <input type="number" name="moisture" id="input_moisture" class="form-control"
+                                placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="fert_label_temp">Temp (°C)</label>
+                            <input type="number" name="temperature" id="input_temp" class="form-control"
+                                placeholder="28" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="fert_label_humidity">Humidity (%)</label>
+                            <input type="number" name="humidity" id="input_humidity" class="form-control"
+                                placeholder="50" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button type="submit" class="btn" style="width: 100%; max-width: 400px; height: 3.5rem;"
+                        data-i18n="fert_btn_analyze">
+                        <i class="fas fa-microscope"></i>
+                        Analyze Lab Results
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Value Helper Modal (Simplified for UI consistency) -->
+        <div id="value-help-modal"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+            <div class="card" style="max-width: 600px; padding: 2.5rem; position: relative;">
+                <button onclick="document.getElementById('value-help-modal').style.display='none'"
+                    style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 1.5rem;" data-i18n="fert_modal_title">
+                    How to find these values?
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                        <div
+                            style="width: 40px; height: 40px; background: #ecfdf5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0;">
+                            <i class="fas fa-hospital"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 0.25rem;" data-i18n="fert_modal_lab_title">Agri Soil Test Lab</h4>
+                            <p style="font-size: 0.9rem; color: #64748b;" data-i18n="fert_modal_lab_desc">Visit your
+                                nearest government or private soil
+                                testing laboratory. This is the most accurate way.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                        <div
+                            style="width: 40px; height: 40px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #3b82f6; flex-shrink: 0;">
+                            <i class="fas fa-vial"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 0.25rem;" data-i18n="fert_modal_kit_title">Home Testing Kits</h4>
+                            <p style="font-size: 0.9rem; color: #64748b;" data-i18n="fert_modal_kit_desc">Buy a portable
+                                NPK test kit from an
+                                agricultural store. It uses color cards to show nutrient levels.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                        <div
+                            style="width: 40px; height: 40px; background: #fff7ed; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f97316; flex-shrink: 0;">
+                            <i class="fas fa-droplet"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 0.25rem;" data-i18n="fert_modal_digital_title">Digital Moisture
+                                Meter</h4>
+                            <p style="font-size: 0.9rem; color: #64748b;" data-i18n="fert_modal_digital_desc">Use a
+                                handheld moisture sensor to get instant
+                                percentage readings from your soil.</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('value-help-modal').style.display='none'" class="btn"
+                    style="margin-top: 2rem; width: 100%;" data-i18n="fert_modal_btn">I Understand</button>
+            </div>
+        </div>
+
+        <!-- Soil Identification Guide Modal -->
+        <div id="soil-guide-modal"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2100; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+            <div class="card"
+                style="max-width: 600px; padding: 2.5rem; position: relative; max-height: 90vh; overflow-y: auto;">
+                <button onclick="document.getElementById('soil-guide-modal').style.display='none'"
+                    style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 1rem;" data-i18n="soil_guide_title">
+                    Soil Texture Check
+                </h3>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="soil_guide_desc">
+                    The easiest way to check your soil is the "Squeeze Test". Dampen a handful of soil and squeeze it
+                    firmly.
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #fffbeb; border-radius: var(--radius-md); border-left: 4px solid #f59e0b; cursor: pointer;"
+                        onclick="selectSoilFromGuide('Sandy')">
+                        <i class="fas fa-boxes-stacked" style="font-size: 1.5rem; color: #d97706; margin-top: 5px;"></i>
+                        <div>
+                            <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_sandy_title">Gritty & Loose
+                                (Sandy)</h4>
+                            <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_sandy_desc">If it feels
+                                gritty and doesn't form a ball (falls apart), it is Sandy soil.</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #f0fdf4; border-radius: var(--radius-md); border-left: 4px solid var(--primary); cursor: pointer;"
+                        onclick="selectSoilFromGuide('Loamy')">
+                        <i class="fas fa-mountain-sun"
+                            style="font-size: 1.5rem; color: var(--primary); margin-top: 5px;"></i>
+                        <div>
+                            <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_loam_title">Soft & Crumbly (Loam)
+                            </h4>
+                            <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_loam_desc">If it forms a
+                                ball that crumbles when poked, it is Loamy. Best for most crops.</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #f8fafc; border-radius: var(--radius-md); border-left: 4px solid #475569; cursor: pointer;"
+                        onclick="selectSoilFromGuide('Clayey')">
+                        <i class="fas fa-layer-group" style="font-size: 1.5rem; color: #475569; margin-top: 5px;"></i>
+                        <div>
+                            <h4 style="margin-bottom: 0.25rem;" data-i18n="soil_guide_clay_title">Sticky & Firm (Clay)
+                            </h4>
+                            <p style="font-size: 0.9rem; color: #64748b;" data-i18n="soil_guide_clay_desc">If it forms a
+                                tight, sticky ball that doesn't break easily, it is Clay soil.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; text-align: center;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Not sure? Red or Black
+                        soil? Select colors from the list.</p>
+                    <button onclick="selectSoilFromGuide('Loamy')" class="btn btn-outline"
+                        style="width: 100%; border-style: dashed;" data-i18n="soil_guide_btn_use">
+                        Use Balanced Default (Loamy)
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="results-section" class="result-section">
+
+            <!-- Fertilizer Recommendation -->
+            <div class="fertilizer-card">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.9rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;"
+                        data-i18n="fert_label_rec_fert">
+                        Recommended Fertilizer
+                    </div>
+                    <div class="fertilizer-name" id="fertilizer-name">Urea</div>
+                    <div class="fertilizer-ratio" id="fertilizer-ratio">NPK 46-0-0</div>
+                </div>
+
+                <div class="application-grid" id="application-grid">
+                    <!-- Will be populated dynamically -->
+                </div>
+
+                <!-- Total Load Calculation -->
+                <div id="total-calculation"
+                    style="margin-top: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: var(--radius-md); display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 0.75rem; opacity: 0.9; text-transform: uppercase;"
+                                data-i18n="fert_label_total_area">Total Land Area
+                            </div>
+                            <div style="font-size: 1.5rem; font-weight: 700;"><span id="result-acres">1</span> <span
+                                    data-i18n="wizard_acres_label">Acres</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.75rem; opacity: 0.9; text-transform: uppercase;"
+                                data-i18n="fert_label_est_total">Estimated Total
+                                Fertilizer Needed</div>
+                            <div style="font-size: 2rem; font-weight: 800; color: #fff;"><span
+                                    id="total-weight">--</span> kg</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NPK Analysis -->
+            <div class="section-header">
+                <div class="section-title" data-i18n="fert_label_nutrient_analysis">
+                    <i class="fas fa-chart-line"></i>
+                    Nutrient Level Analysis
+                </div>
+                <div class="section-subtitle" data-i18n="fert_label_nutrient_desc">Detailed breakdown of your soil's NPK
+                    status with actionable
+                    recommendations</div>
+            </div>
+
+            <div class="npk-grid" id="npk-grid">
+                <!-- Will be populated dynamically -->
+            </div>
+
+            <!-- Soil Health Tips -->
+            <div class="section-header">
+                <div class="section-title" data-i18n="fert_label_soil_health">
+                    <i class="fas fa-lightbulb"></i>
+                    Soil Health Tips
+                </div>
+                <div class="section-subtitle" data-i18n="fert_label_soil_health_desc">Expert recommendations to improve
+                    and maintain soil health</div>
+            </div>
+
+            <div class="tips-grid" id="tips-grid">
+                <!-- Will be populated dynamically -->
+            </div>
+
+        </div>
+    </div>
+
+    <footer style="padding: 4rem 0; border-top: 1px solid #f1f5f9; text-align: center; margin-top: 4rem;">
+        <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <p data-i18n="footer_text">Where Nature Meets Intelligence.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script>
+        let currentMode = 'guided';
+        let currentStep = 1;
+        const totalSteps = 5;
+
+        const guidedBtn = document.getElementById('mode-guided');
+        const proBtn = document.getElementById('mode-pro');
+        const guidedWizard = document.getElementById('guided-wizard');
+        const proForm = document.getElementById('fertilizer-form');
+
+        // Mode Toggling
+        guidedBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            setMode('guided');
+        });
+
+        proBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            setMode('pro');
+        });
+
+        function setMode(mode) {
+            currentMode = mode;
+            if (mode === 'guided') {
+                guidedBtn.classList.remove('btn-outline');
+                proBtn.classList.add('btn-outline');
+                proBtn.style.border = 'none';
+                guidedBtn.style.boxShadow = 'none';
+                guidedWizard.style.display = 'block';
+                proForm.style.display = 'none';
+            } else {
+                proBtn.classList.remove('btn-outline');
+                guidedBtn.classList.add('btn-outline');
+                guidedBtn.style.border = 'none';
+                proBtn.style.boxShadow = 'none';
+                guidedWizard.style.display = 'none';
+                proForm.style.display = 'block';
+            }
+        }
+
+        // Wizard Logic
+        const nextBtn = document.getElementById('next-step');
+        const prevBtn = document.getElementById('prev-step');
+        const submitBtn = document.getElementById('wizard-submit');
+        const dots = document.querySelectorAll('.step-dot');
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                // Validation
+                const currentSelect = document.querySelector(`#step-${currentStep} select, #step-${currentStep} input`);
+                if (currentSelect && !currentSelect.value) {
+                    currentSelect.style.borderColor = '#ef4444';
+                    currentSelect.classList.add('shake');
+                    setTimeout(() => currentSelect.classList.remove('shake'), 400);
+                    return;
+                } else if (currentSelect) {
+                    currentSelect.style.borderColor = '';
+                }
+
+                document.getElementById(`step-${currentStep}`).style.display = 'none';
+                currentStep++;
+                document.getElementById(`step-${currentStep}`).style.display = 'block';
+                updateWizardUI();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                document.getElementById(`step-${currentStep}`).style.display = 'none';
+                currentStep--;
+                document.getElementById(`step-${currentStep}`).style.display = 'block';
+                updateWizardUI();
+            }
+        });
+
+        function updateWizardUI() {
+            dots.forEach((dot, idx) => {
+                dot.style.background = (idx + 1 <= currentStep) ? 'var(--primary)' : '#e2e8f0';
+            });
+            prevBtn.style.visibility = (currentStep === 1) ? 'hidden' : 'visible';
+            if (currentStep === totalSteps) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        function selectSoilFromGuide(soilType) {
+            const wizardSelect = document.getElementById('wizard_soil');
+            if (wizardSelect) wizardSelect.value = soilType;
+            const proSelect = document.getElementById('soil_type');
+            if (proSelect) proSelect.value = soilType;
+            document.getElementById('soil-guide-modal').style.display = 'none';
+            const targetSelect = currentMode === 'guided' ? wizardSelect : proSelect;
+            if (targetSelect) {
+                targetSelect.style.border = '2px solid var(--primary)';
+                setTimeout(() => targetSelect.style.border = '', 2000);
+            }
+        }
+
+        // Result Display Logic (Unified)
+        async function processSubmission(formData) {
+            const resultsSection = document.getElementById('results-section');
+            resultsSection.classList.remove('active');
+
+            try {
+                // If in GUIDED mode, fetch typical values first
+                if (currentMode === 'guided') {
+                    const typResponse = await fetch('/api/typical-values', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            soil_type: formData.soil_type,
+                            crop_type: formData.crop_type
+                        })
+                    });
+                    const typValues = await typResponse.json();
+                    if (typValues.error) throw new Error(typValues.error);
+
+                    // Adjust typical values based on Wizard inputs
+                    const adjustedValues = { ...typValues };
+
+                    // Simple heuristic adjustments
+                    if (formData.growth_stage === 'Flowering') {
+                        adjustedValues.p *= 0.8; // Assume P consumption is high, current level is lower
+                        adjustedValues.k *= 0.8;
+                    }
+                    if (formData.problems === 'Yellowing') {
+                        adjustedValues.n *= 0.6; // Heavy Nitrogen deficiency
+                    }
+
+                    formData = { ...formData, ...adjustedValues };
+                }
+
+                const response = await fetch('/fertilizer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.fertilizer) {
+                    displayResults(result, formData.acres);
+                    resultsSection.classList.add('active');
+                    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else if (result.error) {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Advisor error: " + error.message);
+            }
+        }
+
+        document.getElementById('wizard-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('wizard-submit');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Analyzing...`;
+            btn.disabled = true;
+
+            const formData = Object.fromEntries(new FormData(this).entries());
+            processSubmission(formData).finally(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            });
+        });
+
+        document.getElementById('fertilizer-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const btn = this.querySelector('button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing...`;
+            btn.disabled = true;
+
+            const formData = Object.fromEntries(new FormData(this).entries());
+            processSubmission(formData).finally(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            });
+        });
+
+        function displayResults(data, acres) {
+            // Display fertilizer recommendation
+            document.getElementById('fertilizer-name').textContent = data.fertilizer;
+            document.getElementById('fertilizer-ratio').textContent = `NPK ${data.application_guide.npk_ratio}`;
+
+            // Handle Acreage/Total Calculation
+            if (acres && acres > 0) {
+                document.getElementById('total-calculation').style.display = 'block';
+                document.getElementById('result-acres').textContent = acres;
+
+                // Logic: Dosage is usually given as "100-150 kg/hectare"
+                // 1 Hectare = 2.47 Acres. So 1 Acre = 0.404 Hectares.
+                const dosageStr = data.application_guide.dosage;
+                const match = dosageStr.match(/(\d+)/); // Get the first number (minimum dosage)
+                if (match) {
+                    const baseDosageHectare = parseInt(match[1]);
+                    const totalWeight = Math.round(baseDosageHectare * 0.404 * acres);
+                    document.getElementById('total-weight').textContent = totalWeight;
+                }
+            } else {
+                document.getElementById('total-calculation').style.display = 'none';
+            }
+
+            // Display application guidelines
+            const appGrid = document.getElementById('application-grid');
+            appGrid.innerHTML = `
+                <div class="application-item">
+                    <div class="application-item-label"><i class="fas fa-weight-hanging"></i> Dosage</div>
+                    <div class="application-item-value">${data.application_guide.dosage}</div>
+                </div>
+                <div class="application-item">
+                    <div class="application-item-label"><i class="fas fa-clock"></i> Timing</div>
+                    <div class="application-item-value">${data.application_guide.timing}</div>
+                </div>
+                <div class="application-item">
+                    <div class="application-item-label"><i class="fas fa-hand-sparkles"></i> Method</div>
+                    <div class="application-item-value">${data.application_guide.method}</div>
+                </div>
+                <div class="application-item" style="grid-column: 1 / -1;">
+                    <div class="application-item-label"><i class="fas fa-exclamation-triangle"></i> Precautions</div>
+                    <div class="application-item-value">${data.application_guide.precautions}</div>
+                </div>
+                <div class="application-item" style="grid-column: 1 / -1; background: rgba(255, 255, 255, 0.25);">
+                    <div class="application-item-label"><i class="fas fa-info-circle"></i> Soil-Specific Tip</div>
+                    <div class="application-item-value">${data.application_guide.soil_specific_tip}</div>
+                </div>
+            `;
+
+            // Re-use existing NPK Grid and Tips Grid logic
+            const npkGrid = document.getElementById('npk-grid');
+            npkGrid.innerHTML = '';
+            ['nitrogen', 'phosphorus', 'potassium'].forEach(nutrient => {
+                const analysis = data.npk_analysis[nutrient];
+                if (!analysis) return;
+                const percentage = analysis.optimal > 0 ? Math.min((analysis.current / analysis.optimal) * 100, 150) : 100;
+                const card = document.createElement('div');
+                card.className = `npk-card status-${analysis.status}`;
+                card.innerHTML = `
+                    <div class="npk-header">
+                        <div class="npk-title"><span class="npk-icon">${analysis.icon}</span>${analysis.name}</div>
+                        <span class="status-badge ${analysis.status}">${analysis.status}</span>
+                    </div>
+                    <div class="npk-levels">
+                        <div class="level-item"><div class="level-label">Current</div><div class="level-value">${Math.round(analysis.current)}</div></div>
+                        <div class="level-item"><div class="level-label">Optimal</div><div class="level-value">${Math.round(analysis.optimal)}</div></div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill ${analysis.status}" style="width: ${percentage}%"></div></div>
+                    <div class="npk-info">
+                        <div class="info-section"><div class="info-label"><i class="fas fa-info-circle"></i> Role</div><div class="info-text">${analysis.role}</div></div>
+                        <div class="info-section"><div class="info-label"><i class="fas fa-check-circle"></i> Recommendation</div><div class="info-text">${analysis.recommendation}</div></div>
+                    </div>
+                `;
+                npkGrid.appendChild(card);
+            });
+
+            const tipsGrid = document.getElementById('tips-grid');
+            tipsGrid.innerHTML = '';
+            data.soil_tips.forEach(tip => {
+                const tipCard = document.createElement('div');
+                tipCard.className = 'tip-card';
+                tipCard.innerHTML = `
+                    <div class="tip-header"><span class="tip-icon">${tip.icon}</span><div class="tip-title">${tip.title}</div></div>
+                    <div class="tip-text">${tip.tip}</div>
+                `;
+                tipsGrid.appendChild(tipCard);
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Registration - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: calc(100vh - 200px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 550px;
+            padding: 3rem;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .auth-header i {
+            font-size: 3rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .auth-header h2 {
+            font-family: 'Outfit';
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar container">
+        <div class="logo">
+            <i class="fas fa-leaf"></i>
+            <span>Green Eye <span style="font-weight: 300; opacity: 0.6;">AI</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="/login" data-i18n="nav_login_link">Log In</a>
+            <select id="language-select" onchange="changeLanguage(this.value)"
+                style="padding: 8px 12px; border-radius: 50px; border: 1px solid #e2e8f0; background: white; font-weight: 600; cursor: pointer; outline: none;">
+                <option value="en">🇬🇧 English</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="ml">🌴 മലയാളം</option>
+            </select>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="card auth-card">
+            <div class="auth-header">
+                <i class="fas fa-seedling"></i>
+                <h2 data-i18n="reg_title">Grow With Us</h2>
+                <p style="color: var(--text-muted); margin-top: 0.5rem;" data-i18n="reg_desc">Join thousands of farmers
+                    using AI to improve
+                    yield.</p>
+            </div>
+
+            <form action="/register" method="POST">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="reg_label_name">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="Enter name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="reg_label_phone">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="+91" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="reg_label_lang">Preferred Language</label>
+                    <select name="language" class="form-control" required>
+                        <option value="en" data-i18n="lang_en">English</option>
+                        <option value="hi" data-i18n="lang_hi">हिन्दी (Hindi)</option>
+                        <option value="ml" data-i18n="lang_ml">മലയാളം (Malayalam)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Main Crops Growing (comma separated)</label>
+                    <input type="text" name="crops" class="form-control" placeholder="e.g. Wheat, Rice, Tomato">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Create Password</label>
+                    <input type="password" id="password" name="password" class="form-control"
+                        placeholder="Create a strong password" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" id="confirm_password" class="form-control" placeholder="Repeat your password"
+                        required>
+                </div>
+
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem;">
+                    By registering, you agree to our <a href="#" style="color: var(--primary); font-weight: 700;">Terms
+                        of Service</a>.
+                </p>
+
+                <button type="submit" class="btn"
+                    style="width: 100%; background: var(--secondary); box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);"
+                    data-i18n="reg_btn_submit">
+                    Create Account <i class="fas fa-check"></i>
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.95rem;">
+                <span data-i18n="reg_already_member">Already a member?</span> <a href="/login"
+                    style="color: var(--secondary); font-weight: 700; text-decoration: none;"
+                    data-i18n="reg_login_link">Log in here</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script>
+        document.querySelector('form').addEventListener('submit', function (e) {
+            let valid = true;
+            const phone = document.querySelector('input[name="phone"]');
+            const password = document.getElementById('password');
+            const confirm = document.getElementById('confirm_password');
+            const name = document.querySelector('input[name="name"]');
+
+            // Reset styles
+            [phone, password, confirm, name].forEach(el => {
+                el.style.borderColor = '';
+                el.classList.remove('shake');
+            });
+
+            // Name validation
+            if (name.value.trim().length < 2) {
+                valid = false;
+                name.style.borderColor = '#ef4444';
+                name.classList.add('shake');
+            }
+
+            // Phone validation (basic Indian format check)
+            const phoneRegex = /^[0-9]{10}$/;
+            if (!phoneRegex.test(phone.value.replace(/\D/g, ''))) {
+                valid = false;
+                phone.style.borderColor = '#ef4444';
+                phone.classList.add('shake');
+            }
+
+            // Password length
+            if (password.value.length < 6) {
+                valid = false;
+                password.style.borderColor = '#ef4444';
+                password.classList.add('shake');
+            }
+
+            // Password match
+            if (password.value !== confirm.value) {
+                valid = false;
+                confirm.style.borderColor = '#ef4444';
+                confirm.classList.add('shake');
+            }
+
+            if (!valid) {
+                e.preventDefault();
+                setTimeout(() => {
+                    [phone, password, confirm, name].forEach(el => el.classList.remove('shake'));
+                }, 500);
+            }
+        });
+    </script>
+
+    <footer>
+        <div class="container">
+            <p style="font-size: 0.85rem; opacity: 0.5;">&copy; 2026 Green Eye AI.Where Nature Meets Intelligence.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

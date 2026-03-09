@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success Center - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tag {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .scheme-card {
+            transition: var(--transition);
+        }
+
+        .scheme-card:hover {
+            border-color: var(--primary-light);
+        }
+
+        .external-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .external-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/disease" data-i18n="nav_disease">Disease Detect</a>
+            <a href="/market-insights" data-i18n="nav_market">Market</a>
+            <a href="/profile" style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center;"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+            <a href="/live-chat" data-i18n="nav_chat">Expert Chat</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="hero" style="padding: 4rem 0 2rem;">
+            <div class="hero-badge" data-i18n="card_finance_title">
+                <i class="fas fa-vault" style="margin-right: 8px;"></i> Success Center
+            </div>
+            <h1 style="font-size: 3.5rem;" data-i18n="card_finance_title">Financial Assistance</h1>
+            <p data-i18n="card_finance_desc">Direct access to government subsidies, agricultural loans, and financial
+                aid.</p>
+        </header>
+
+        <section class="card"
+            style="padding: 2.5rem; margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <h3 style="font-family: 'Outfit'; margin-bottom: 1.5rem; text-align: center;" data-i18n="fin_search_title">
+                Filter Schemes</h3>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" data-i18n="fin_search_label">Farmer Category</label>
+                <select id="farmer-type" class="form-control">
+                    <option value="all" data-i18n="fin_opt_all">All Schemes</option>
+                    <option value="small" data-i18n="fin_opt_small">Small Farmer (< 2 Hectares)</option>
+                    <option value="woman" data-i18n="fin_opt_woman">Woman Farmer</option>
+                    <option value="tenant" data-i18n="fin_opt_tenant">Tenant Farmer</option>
+                    <option value="sc_st" data-i18n="fin_opt_scst">SC/ST Farmer</option>
+                </select>
+            </div>
+        </section>
+
+        <div class="grid" id="scheme-grid">
+            <!-- PM-KISAN -->
+            <div class="card scheme-card" data-tags="small all">
+                <div class="card-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                <h3 style="font-family: 'Outfit';" data-i18n="fin_scheme_1_title">PM-KISAN</h3>
+                <p data-i18n="fin_scheme_1_desc">Income support of ₹6,000/- per year in three equal installments to all
+                    landholding farmer families.
+                </p>
+                <div style="margin-top: auto;">
+                    <span class="tag" data-i18n="fin_tag_direct">Direct Benefit</span>
+                    <a href="https://pmkisan.gov.in" target="_blank" class="external-link">
+                        <span data-i18n="fin_btn_check">Check Status</span> <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- KCC -->
+            <div class="card scheme-card" data-tags="small tenant all">
+                <div class="card-icon"><i class="fas fa-credit-card"></i></div>
+                <h3 style="font-family: 'Outfit';" data-i18n="fin_scheme_2_title">Kisan Credit Card (KCC)</h3>
+                <p data-i18n="fin_scheme_2_desc">Timely access to credit for cultivation expenses, post-harvest
+                    expenses, and working capital.</p>
+                <div style="margin-top: auto;">
+                    <span class="tag" data-i18n="fin_tag_loan">Low Interest Loan</span>
+                    <a href="#" class="external-link">
+                        <span data-i18n="fin_btn_learn">Learn More</span> <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Fasal Bima -->
+            <div class="card scheme-card" data-tags="small tenant sc_st woman all">
+                <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3 style="font-family: 'Outfit';" data-i18n="fin_scheme_3_title">PM Fasal Bima Yojana</h3>
+                <p data-i18n="fin_scheme_3_desc">Crop insurance coverage against non-preventable natural risks from
+                    pre-sowing to post-harvest.</p>
+                <div style="margin-top: auto;">
+                    <span class="tag" data-i18n="fin_tag_insurance">Insurance</span>
+                    <a href="https://pmfby.gov.in" target="_blank" class="external-link">
+                        <span data-i18n="fin_btn_apply">Apply Online</span> <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mahila Kisan -->
+            <div class="card scheme-card" data-tags="woman all">
+                <div class="card-icon"><i class="fas fa-female"></i></div>
+                <h3 style="font-family: 'Outfit';" data-i18n="fin_scheme_4_title">Mahila Kisan Sashaktikaran</h3>
+                <p data-i18n="fin_scheme_4_desc">Special provisions and higher subsidies for women farmers to promote
+                    sustainable agriculture.</p>
+                <div style="margin-top: auto;">
+                    <span class="tag" data-i18n="fin_tag_woman">Woman Only</span>
+                    <a href="#" class="external-link">
+                        <span data-i18n="fin_btn_guide">View Guidelines</span> <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="padding: 4rem 0; border-top: 1px solid #f1f5f9; text-align: center;">
+        <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <p data-i18n="footer_text">Where Nature Meets Intelligence.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script>
+        document.getElementById('farmer-type').addEventListener('change', function () {
+            const type = this.value;
+            const cards = document.querySelectorAll('.scheme-card');
+
+            cards.forEach(card => {
+                const tags = card.getAttribute('data-tags');
+                if (tags.includes(type) || type === 'all') {
+                    card.style.display = 'flex';
+                    card.style.animation = 'fadeInUp 0.6s ease-out';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

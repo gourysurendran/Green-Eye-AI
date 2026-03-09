@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Roadmap - Green Eye AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+            margin-bottom: 5rem;
+        }
+
+        .month-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--glass-shadow);
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            animation: fadeInUp 0.6s ease-out;
+            position: relative;
+        }
+
+        .month-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-light);
+        }
+
+        .month-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .month-name {
+            font-size: 1.75rem;
+            font-weight: 800;
+            font-family: 'Outfit';
+            color: var(--text-main);
+        }
+
+        .season-badge {
+            font-size: 0.75rem;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .season-rabi {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .season-zaid {
+            background: #fffbeb;
+            color: #92400e;
+        }
+
+        .season-kharif {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .activity-list li {
+            position: relative;
+            padding-left: 1.75rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .activity-list li::before {
+            content: '\f058';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--primary);
+            position: absolute;
+            left: 0;
+            top: 2px;
+            font-size: 1rem;
+        }
+
+        .month-num {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #f1f5f9;
+            position: absolute;
+            bottom: -10px;
+            right: 10px;
+            z-index: -1;
+            line-height: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/market-insights" data-i18n="nav_market">Market</a>
+            <a href="/profile" style="color: var(--primary); font-size: 1.4rem; display: flex; align-items: center;"
+                title="My Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="hero" style="padding: 4rem 0 2rem;">
+            <div class="hero-badge" data-i18n="card_month_title">
+                <i class="fas fa-route" style="margin-right: 8px;"></i> Farming Roadmap
+            </div>
+            <h1 style="font-size: 3.5rem;" data-i18n="card_month_title">Monthly Guide.</h1>
+            <p data-i18n="card_month_desc">A comprehensive 12-month strategy for maximizing your agricultural output.
+            </p>
+        </header>
+
+        <div class="month-grid">
+            <!-- 1. January -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_1">January</div>
+                    <span class="season-badge season-rabi" data-i18n="season_rabi">Rabi</span>
+                </div>
+                <ul class="activity-list">
+                    <li data-i18n="jan_task_1">Irrigate Wheat and Barley crops.</li>
+                    <li data-i18n="jan_task_2">Apply second dose of urea if needed.</li>
+                    <li data-i18n="jan_task_3">Protect crops from frost (sheet covering).</li>
+                </ul>
+                <div class="month-num">01</div>
+            </div>
+
+            <!-- 2. February -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_2">February</div>
+                    <span class="season-badge season-rabi" data-i18n="season_rabi">Rabi</span>
+                </div>
+                <ul class="activity-list">
+                    <li data-i18n="feb_task_1">Harvest early Potato & Mustard.</li>
+                    <li data-i18n="feb_task_2">Prepare land for Sugarcane planting.</li>
+                    <li data-i18n="feb_task_3">Start sowing Cucurbits (Melons).</li>
+                </ul>
+                <div class="month-num">02</div>
+            </div>
+
+            <!-- 3. March -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_3">March</div>
+                    <span class="season-badge season-zaid" data-i18n="season_zaid">Zaid</span>
+                </div>
+                <ul class="activity-list">
+                    <li data-i18n="mar_task_1">Harvest Wheat, Gram, and Barley.</li>
+                    <li data-i18n="mar_task_2">Sow Zaid crops (Moong, Watermelon).</li>
+                    <li data-i18n="mar_task_3">Deep ploughing for summer solarization.</li>
+                </ul>
+                <div class="month-num">03</div>
+            </div>
+
+            <!-- 4. April -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_4">April</div>
+                    <span class="season-badge season-zaid" data-i18n="season_zaid">Zaid</span>
+                </div>
+                <ul class="activity-list">
+                    <li data-i18n="apr_task_1">Threshing and storage of Rabi produce.</li>
+                    <li data-i18n="apr_task_2">Irrigate Zaid vegetables and pulses.</li>
+                    <li data-i18n="apr_task_3">Apply manure to prepared fields.</li>
+                </ul>
+                <div class="month-num">04</div>
+            </div>
+
+            <!-- 5. May -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_5">May</div>
+                    <span class="season-badge season-zaid" data-i18n="season_zaid">Zaid</span>
+                </div>
+                <ul class="activity-list">
+                    <li data-i18n="may_task_1">Deep summer ploughing to kill pests.</li>
+                    <li data-i18n="may_task_2">Procure seeds for Kharif season.</li>
+                    <li data-i18n="may_task_3">Prepare nurseries for Paddy (Rice).</li>
+                </ul>
+                <div class="month-num">05</div>
+            </div>
+
+            <!-- 6. June -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_6">June</div>
+                    <span class="season-badge season-kharif" data-i18n="season_kharif">Kharif</span>
+                </div>
+                <ul class="activity-list">
+                    <li data-i18n="jun_task_1">Sow Cotton, Maize, and Jowar.</li>
+                    <li data-i18n="jun_task_2">Transplant Paddy seedlings.</li>
+                    <li data-i18n="jun_task_3">Green manuring (Dhaincha).</li>
+                </ul>
+                <div class="month-num">06</div>
+            </div>
+
+            <!-- 7. July -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_7">July</div>
+                    <span class="season-badge season-kharif" data-i18n="season_kharif">Kharif</span>
+                </div>
+                <ul class="activity-list">
+                    <li>Continue Paddy transplantation.</li>
+                    <li>Weeding in Cotton and Maize.</li>
+                    <li>Plantation of fruit trees.</li>
+                </ul>
+                <div class="month-num">07</div>
+            </div>
+
+            <!-- 8. August -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_8">August</div>
+                    <span class="season-badge season-kharif" data-i18n="season_kharif">Kharif</span>
+                </div>
+                <ul class="activity-list">
+                    <li>Top dressing of Urea in Paddy.</li>
+                    <li>Pest control (Stem borer/Leaf folder).</li>
+                    <li>Harvest early pulses.</li>
+                </ul>
+                <div class="month-num">08</div>
+            </div>
+
+            <!-- 9. September -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_9">September</div>
+                    <span class="season-badge season-kharif" data-i18n="season_kharif">Kharif</span>
+                </div>
+                <ul class="activity-list">
+                    <li>Harvest early Maize and Jowar.</li>
+                    <li>Prepare land for Mustard.</li>
+                    <li>Stop irrigation in Paddy before harvest.</li>
+                </ul>
+                <div class="month-num">09</div>
+            </div>
+
+            <!-- 10. October -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_10">October</div>
+                    <span class="season-badge season-rabi" data-i18n="season_rabi">Rabi</span>
+                </div>
+                <ul class="activity-list">
+                    <li>Harvest Paddy and Cotton.</li>
+                    <li>Sow Mustard, Gram, Peas, and Lentil.</li>
+                    <li>Sow autumnal Sugarcane.</li>
+                </ul>
+                <div class="month-num">10</div>
+            </div>
+
+            <!-- 11. November -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_11">November</div>
+                    <span class="season-badge season-rabi" data-i18n="season_rabi">Rabi</span>
+                </div>
+                <ul class="activity-list">
+                    <li>Sow Wheat and Barley (Optimal).</li>
+                    <li>First irrigation in Mustard.</li>
+                    <li>Weeding in early sown Rabi crops.</li>
+                </ul>
+                <div class="month-num">11</div>
+            </div>
+
+            <!-- 12. December -->
+            <div class="month-card">
+                <div class="month-header">
+                    <div class="month-name" data-i18n="month_12">December</div>
+                    <span class="season-badge season-rabi" data-i18n="season_rabi">Rabi</span>
+                </div>
+                <ul class="activity-list">
+                    <li>First irrigation in Wheat.</li>
+                    <li>Late sowing of Wheat (if delayed).</li>
+                    <li>Protect crops from cold waves.</li>
+                </ul>
+                <div class="month-num">12</div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="padding: 4rem 0; border-top: 1px solid #f1f5f9; text-align: center;">
+        <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-leaf"></i> Green Eye
+        </div>
+        <p data-i18n="footer_text">Where Nature Meet Intelligence.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+</body>
+
+</html>

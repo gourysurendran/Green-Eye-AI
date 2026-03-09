@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Eye AI – Smart Irrigation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .irrigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .water-level {
+            height: 200px;
+            background: rgba(14, 165, 233, 0.1);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .water-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to top, #0ea5e9, #38bdf8);
+            transition: height 0.5s ease;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #0ea5e9;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body data-farmer-id="{{ current_farmer_id or '' }}">
+
+    <nav class="navbar container">
+        <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <i class="fas fa-leaf"></i>
+            <span>greeneye</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="/disease" data-i18n="nav_disease">Disease Detect</a>
+            <a href="/market-insights" data-i18n="nav_market">Market</a>
+            <a href="/profile" style="color: var(--primary); font-size: 1.4rem;"><i class="fas fa-user-circle"></i></a>
+        </div>
+    </nav>
+
+    <header class="hero container" style="padding: 4rem 1rem 2rem;">
+        <h1>
+            <span
+                style="background: linear-gradient(135deg, #0ea5e9, #38bdf8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;"
+                data-i18n="card_irrigation_title">Smart
+                Irrigation</span>
+        </h1>
+        <p data-i18n="card_irrigation_desc">Automated watering schedules integrated with real-time weather data.</p>
+    </header>
+
+    <main class="container">
+
+        <!-- Weather Status Integration -->
+        <div class="status-card"
+            style="background: linear-gradient(135deg, #0f172a, #1e293b); color: white; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;"
+                        data-i18n="irr_status_weather">
+                        Weather Status</h3>
+                    <div id="weather-summary" style="font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem;"
+                        data-i18n="irr_status_check">Checking
+                        forecast...</div>
+                    <div id="rain-advisory" style="color: #38bdf8; margin-top: 0.5rem; font-size: 0.9rem;"
+                        data-i18n="irr_status_sync"><i class="fas fa-sync fa-spin"></i> Syncing with OpenMeteo...</div>
+                </div>
+                <div style="text-align: right;">
+                    <i id="weather-icon" class="fas fa-cloud-sun" style="font-size: 3rem; color: #fbbf24;"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="irrigation-grid">
+
+            <!-- Panel 1: Schedule & Control -->
+            <div class="status-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 data-i18n="irr_label_schedule"><i class="fas fa-clock"
+                            style="color: #0ea5e9; margin-right: 0.5rem;"></i> Schedule</h3>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-mode" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.9rem; color: #64748b;" data-i18n="irr_label_next">Next Watering</div>
+                    <div id="next-watering" style="font-size: 1.8rem; font-weight: 700; color: #1e293b;">Today, 06:00 PM
+                    </div>
+                    <div id="schedule-status"
+                        style="color: #10b981; font-weight: 600; font-size: 0.9rem; margin-top: 0.2rem;"
+                        data-i18n="irr_status_on">
+                        <i class="fas fa-check-circle"></i> On Schedule
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: rgba(14, 165, 233, 0.1); padding: 1rem; border-radius: 10px;">
+                        <div style="font-size: 0.8rem; color: #64748b;">Duration</div>
+                        <div id="schedule-duration" style="font-size: 1.2rem; font-weight: 700;">45 min</div>
+                    </div>
+                    <div style="background: rgba(14, 165, 233, 0.1); padding: 1rem; border-radius: 10px;">
+                        <div style="font-size: 0.8rem; color: #64748b;">Method</div>
+                        <div id="schedule-method" style="font-size: 1.2rem; font-weight: 700;">Drip</div>
+                    </div>
+                </div>
+                <button class="btn"
+                    style="width: 100%; margin-top: 1.5rem; background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid #0ea5e9;"
+                    onclick="waterNow()" data-i18n="irr_btn_water">
+                    <i class="fas fa-tint"></i> Water Now (+50L)
+                </button>
+            </div>
+
+            <!-- Panel 2: Water Usage -->
+            <div class="status-card">
+                <h3><i class="fas fa-chart-pie" style="color: #0ea5e9; margin-right: 0.5rem;"></i> Water Usage</h3>
+                <div class="water-level">
+                    <div class="water-fill"></div>
+                    <div id="usage-percent-text"
+                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; font-weight: 800; color: #1e293b; z-index: 10;">
+                        0%
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                    <div>
+                        <div style="font-size: 0.8rem; color: #64748b;">Used Today</div>
+                        <div id="water-used-today" style="font-size: 1.1rem; font-weight: 700;">-- Liters</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.8rem; color: #64748b;">Weekly Limit</div>
+                        <div style="font-size: 1.1rem; font-weight: 700;">1000L</div>
+                    </div>
+                </div>
+                <!-- New Over-watering Alert -->
+                <div id="overwater-alert"
+                    style="display: none; margin-top: 1rem; padding: 0.75rem; background: #fee2e2; color: #991b1b; border-radius: 10px; border-left: 4px solid #ef4444; font-size: 0.85rem; font-weight: 600;"
+                    data-i18n="irr_alert_overwater">
+                    <i class="fas fa-exclamation-triangle"></i> OVER-WATERING ALERT: You have exceeded the optimal
+                    weekly limit. This may lead to root rot and nutrient leaching.
+                </div>
+            </div>
+        </div>
+
+        <!-- Soil Moisture History Chart -->
+        <div class="status-card" style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0;" data-i18n="irr_trend_title"><i class="fas fa-chart-line"
+                        style="color: #0ea5e9; margin-right: 0.5rem;"></i>
+                    Soil Moisture Trend (Last 24h)</h3>
+                <div
+                    style="font-size: 0.85rem; background: #ccfbf1; color: #0f766e; padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700;">
+                    Live Feed</div>
+            </div>
+            <div style="height: 300px; width: 100%;">
+                <canvas id="moistureChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Panel 3: Settings -->
+        <div class="status-card">
+            <h3><i class="fas fa-sliders-h" style="color: #0ea5e9; margin-right: 0.5rem;"></i> Settings</h3>
+            <form id="irrigation-form">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Crop Type</label>
+                    <select id="crop-select" class="form-control"
+                        style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <option value="Tomato">Tomato</option>
+                        <option value="Potato">Potato</option>
+                        <option value="Wheat">Wheat</option>
+                        <option value="Rice">Rice</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Soil Moisture Threshold (<span id="threshold-val">40</span>%)</label>
+                    <input type="range" id="moisture-threshold" min="0" max="100" value="40" style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #64748b;">
+                        <span>Dry (20%)</span>
+                        <span>Wet (80%)</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="width: 100%; background: #0ea5e9;">Update Settings</button>
+                <div id="ai-suggestion"
+                    style="margin-top: 1rem; padding: 0.75rem; background: #fff7ed; border-radius: 8px; border-left: 3px solid #f97316; font-size: 0.85rem; color: #c2410c;">
+                    <i class="fas fa-info-circle"></i> AI suggests <strong>Drip Irrigation</strong> for Tomato to
+                    save 40% water.
+                </div>
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <a id="irrigation-expert-link" href="/live-chat"
+                        style="font-size: 0.85rem; color: #0ea5e9; font-weight: 700; text-decoration: none;">
+                        <i class="fas fa-user-tie"></i> Discuss Irrigation with Expert
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script>
+        // Water Usage Logic
+        function loadWaterUsage() {
+            const today = new Date().toDateString();
+            const storedDate = localStorage.getItem('irrigationDate');
+            let usage = parseFloat(localStorage.getItem('waterUsage') || "0");
+
+            // Reset if new day
+            if (storedDate !== today) {
+                usage = 0;
+                localStorage.setItem('irrigationDate', today);
+                localStorage.setItem('waterUsage', "0");
+            }
+
+            updateWaterUI(usage);
+            updateScheduleUI();
+            loadSettings();
+        }
+
+        // --- Irrigation Settings Logic ---
+        function loadSettings() {
+            const crop = localStorage.getItem('irrigationCrop') || 'Tomato';
+            const threshold = localStorage.getItem('irrigationThreshold') || '40';
+
+            const cropSelect = document.getElementById('crop-select');
+            const threshInput = document.getElementById('moisture-threshold');
+
+            if (cropSelect) cropSelect.value = crop;
+            if (threshInput) {
+                threshInput.value = threshold;
+                document.getElementById('threshold-val').textContent = threshold;
+            }
+
+            updateAISuggestion(crop);
+        }
+
+        const moistureInput = document.getElementById('moisture-threshold');
+        if (moistureInput) {
+            moistureInput.addEventListener('input', (e) => {
+                document.getElementById('threshold-val').textContent = e.target.value;
+            });
+        }
+
+        const irrigationForm = document.getElementById('irrigation-form');
+        if (irrigationForm) {
+            irrigationForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const cropSelect = document.getElementById('crop-select');
+                const threshInput = document.getElementById('moisture-threshold');
+
+                if (!cropSelect.value) {
+                    cropSelect.classList.add('shake');
+                    cropSelect.style.borderColor = '#ef4444';
+                    setTimeout(() => cropSelect.classList.remove('shake'), 400);
+                    return;
+                }
+
+                const crop = cropSelect.value;
+                const threshold = threshInput.value;
+
+                localStorage.setItem('irrigationCrop', crop);
+                localStorage.setItem('irrigationThreshold', threshold);
+
+                updateAISuggestion(crop);
+
+                // Update Chart Threshold
+                if (moistureChart) {
+                    moistureChart.data.datasets[1].data = Array(24).fill(parseInt(threshold));
+                    moistureChart.update();
+                }
+
+                // Button feedback
+                const btn = e.target.querySelector('button');
+                const originalText = btn.innerHTML;
+                cropSelect.style.borderColor = '';
+                btn.innerHTML = '<i class="fas fa-check"></i> Settings Saved!';
+                setTimeout(() => btn.innerHTML = originalText, 2000);
+            });
+        }
+
+        function updateAISuggestion(crop) {
+            const suggestionEl = document.getElementById('ai-suggestion');
+            const durationEl = document.getElementById('schedule-duration');
+            const methodDisplayEl = document.getElementById('schedule-method');
+
+            if (!suggestionEl) return;
+
+            let method = "Drip Irrigation";
+            let savings = "40%";
+            let duration = "45 min";
+            let frequency = 12; // Standard: Twice a day
+
+            if (crop === 'Rice') {
+                method = "Flood/Saturation";
+                savings = "15%";
+                duration = "120 min";
+                frequency = 8; // Thrice a day for rice
+            } else if (crop === 'Potato') {
+                method = "Sprinkler";
+                savings = "25%";
+                duration = "60 min";
+                frequency = 10;
+            } else if (crop === 'Wheat') {
+                method = "Sprinkler/Surface";
+                savings = "30%";
+                duration = "90 min";
+                frequency = 14; // Less frequent
+            }
+
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const translatedCrop = translations[lang]['crop_' + crop.toLowerCase()] || crop;
+            suggestionEl.innerHTML = `<i class="fas fa-info-circle"></i> ${translations[lang]['irr_ai_advise'] || 'AI suggests'} <strong>${method}</strong> ${translations[lang]['for'] || 'for'} ${translatedCrop} ${translations[lang]['irr_ai_save'] || 'to save'} ${savings} ${translations[lang]['irr_ai_water'] || 'water'}.`;
+
+            // Store frequency for schedule calculation
+            localStorage.setItem('irrigationFrequency', frequency);
+            updateScheduleUI();
+
+            // Update the Schedule card too
+            if (durationEl) durationEl.textContent = duration;
+            if (methodDisplayEl) methodDisplayEl.textContent = method.split('/')[0]; // Simpler view
+
+            // Update Expert Link
+            const expertLink = document.getElementById('irrigation-expert-link');
+            if (expertLink) {
+                const msg = encodeURIComponent(`Hello, I am growing ${crop} and using ${method}. Can you give me more tips on optimal water management?`);
+                expertLink.href = `/live-chat?msg=${msg}`;
+            }
+        }
+
+        function updateScheduleUI() {
+            const nextEl = document.getElementById('next-watering');
+            if (!nextEl) return;
+
+            const frequency = parseInt(localStorage.getItem('irrigationFrequency') || "12");
+            const lastTimeStr = localStorage.getItem('lastIrrigationTime');
+            let nextDate;
+
+            if (lastTimeStr) {
+                // Calculate based on last watering + frequency
+                const lastDate = new Date(parseInt(lastTimeStr));
+                nextDate = new Date(lastDate.getTime() + (frequency * 60 * 60 * 1000));
+
+                // If the "calculated next" is in the far past (e.g. user hasn't visited in days), 
+                // reset to a sensible future time
+                if (nextDate < new Date()) {
+                    nextDate = new Date(new Date().getTime() + (frequency * 30 * 60 * 1000)); // Half frequency from now
+                }
+            } else {
+                // First time: Set a varied time based on the frequency
+                // Add a small randomized 'jitter' (1-45 mins) so it's not always on the hour
+                const jitter = Math.floor(Math.random() * 45);
+                nextDate = new Date(new Date().getTime() + (frequency * 0.5 * 60 * 60 * 1000) + (jitter * 60 * 1000));
+            }
+
+            // Display formatting
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            let timeStr = nextDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            let dayStr = nextDate.toDateString() === new Date().toDateString() ? (translations[lang]['irr_today'] || 'Today') : (translations[lang]['irr_tomorrow'] || 'Tomorrow');
+
+            if (nextDate.getTime() > new Date().getTime() + 86400000) {
+                dayStr = nextDate.toLocaleDateString([], { weekday: 'long' });
+            }
+
+            nextEl.textContent = `${dayStr}, ${timeStr}`;
+        }
+
+        function waterNow() {
+            let usage = parseFloat(localStorage.getItem('waterUsage') || "0");
+
+            // PREVENT WATERING IF LIMIT REACHED
+            if (usage >= 1000) {
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+                alert(translations[lang]['irr_alert_limit_reached'] || "Cannot water: Weekly limit reached. Prevent over-watering to save crops!");
+                return;
+            }
+
+            const amount = 50; // 50L per manual session
+            usage += amount;
+            localStorage.setItem('waterUsage', usage);
+            localStorage.setItem('lastIrrigationTime', Date.now().toString());
+
+            // Visual feedback
+            const btn = document.querySelector('button[onclick="waterNow()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Watered!';
+            setTimeout(() => {
+                if (usage < 1000) btn.innerHTML = originalText;
+                else updateWaterUI(usage);
+            }, 2000);
+
+            updateWaterUI(usage);
+        }
+
+        function updateWaterUI(usage) {
+            const usageEl = document.getElementById('water-used-today');
+            const fillEl = document.querySelector('.water-fill');
+            const percentEl = document.getElementById('usage-percent-text');
+            const alertEl = document.getElementById('overwater-alert');
+            const waterBtn = document.querySelector('button[onclick="waterNow()"]');
+
+            if (usageEl) usageEl.textContent = `${usage} Liters`;
+
+            // Update Bar (Limit 1000L)
+            let percent = (usage / 1000) * 100;
+            let displayPercent = Math.min(percent, 100);
+
+            if (fillEl) {
+                fillEl.style.height = `${displayPercent}%`;
+
+                // Color logic: Shift to RED if 100% or more (Over-watering prevent mode)
+                if (percent >= 100) {
+                    fillEl.style.setProperty('background', 'linear-gradient(to top, #ef4444, #f87171)', 'important');
+                    if (percentEl) {
+                        percentEl.style.color = '#ffffff'; // White for contrast against deep red
+                        percentEl.textContent = "MAX 100%";
+                    }
+                    if (alertEl) alertEl.style.display = 'block';
+
+                    // Disable button to prevent further waste
+                    if (waterBtn) {
+                        waterBtn.style.opacity = "0.5";
+                        waterBtn.style.cursor = "not-allowed";
+                        waterBtn.innerHTML = '<i class="fas fa-ban"></i> Limit Reached';
+                        waterBtn.disabled = true;
+                    }
+                } else {
+                    fillEl.style.setProperty('background', 'linear-gradient(to top, #0ea5e9, #38bdf8)', '');
+                    if (percentEl) {
+                        percentEl.style.color = '#1e293b';
+                        percentEl.textContent = `${Math.round(percent)}%`;
+                    }
+                    if (alertEl) alertEl.style.display = 'none';
+
+                    if (waterBtn && !waterBtn.disabled) {
+                        waterBtn.style.opacity = "1";
+                        waterBtn.style.cursor = "pointer";
+                    }
+                }
+            }
+        }
+
+        // Weather Integration
+        window.addEventListener('load', () => {
+            loadWaterUsage();
+            initMoistureChart();
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(fetchIrrigationWeather, showError);
+            }
+        });
+
+        let moistureChart;
+        function initMoistureChart() {
+            const ctx = document.getElementById('moistureChart').getContext('2d');
+            const threshold = parseInt(localStorage.getItem('irrigationThreshold') || "40");
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+
+            // Generate representative data: starts at 60%, slowly drops, spikes at 6PM (watering)
+            const labels = ['12p', '1p', '2p', '3p', '4p', '5p', '6p', '7p', '8p', '9p', '10p', '11p', '12a', '1a', '2a', '3a', '4a', '5a', '6a', '7a', '8a', '9a', '10a', '11a'];
+            const dataValues = [62, 60, 58, 55, 52, 48, 45, 75, 72, 70, 68, 66, 64, 62, 60, 58, 56, 54, 85, 82, 80, 78, 75, 72];
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(14, 165, 233, 0.4)');
+            gradient.addColorStop(1, 'rgba(14, 165, 233, 0)');
+
+            moistureChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: translations[lang]['irr_label_moisture'] || 'Moisture %',
+                        data: dataValues,
+                        fill: true,
+                        backgroundColor: gradient,
+                        borderColor: '#0ea5e9',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }, {
+                        label: translations[lang]['irr_label_threshold_chart'] || 'Threshold',
+                        data: Array(24).fill(threshold),
+                        borderColor: '#f43f5e',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function fetchIrrigationWeather(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            try {
+                // Fetch forecast for rain check
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=precipitation_sum_dominant&timezone=auto`);
+                const data = await response.json();
+
+                if (data.current_weather) {
+                    const code = data.current_weather.weathercode;
+                    const temp = Math.round(data.current_weather.temperature);
+                    let desc = "Clear";
+                    let advisory = "Conditions are good for watering.";
+                    let icon = "fa-sun";
+
+                    const lang = localStorage.getItem('preferredLanguage') || 'en';
+                    // Rain Logic (WMO codes: 51-67, 80-82 are rain)
+                    if (code > 50) {
+                        desc = translations[lang]['irr_msg_rain'] || "Rain Detected";
+                        advisory = translations[lang]['irr_msg_skip'] || "Recommendation: SKIP watering today.";
+                        icon = "fa-cloud-showers-heavy";
+
+                        // Update UI to show skipped
+                        const statusEl = document.getElementById('schedule-status');
+                        statusEl.innerHTML = `<i class="fas fa-ban"></i> ${translations[lang]['irr_status_skipped'] || 'Skipped (Rain)'}`;
+                        statusEl.style.color = '#f59e0b';
+
+                        const nextEl = document.getElementById('next-watering');
+                        nextEl.textContent = (translations[lang]['irr_tomorrow'] || "Tomorrow") + ", 06:00 AM";
+                        nextEl.style.opacity = "0.7";
+                    } else {
+                        desc = translations[lang]['we_clear'] || "Clear";
+                        advisory = translations[lang]['irr_msg_good'] || "Conditions are good for watering.";
+                    }
+
+                    document.getElementById('weather-summary').textContent = `${temp}°C · ${desc}`;
+                    document.getElementById('rain-advisory').textContent = advisory;
+                    document.getElementById('weather-icon').className = `fas ${icon}`;
+                }
+            } catch (error) {
+                console.error(error);
+                // Even if weather fails, schedule should still be updated by loadWaterUsage
+            }
+        }
+
+        function showError() {
+            document.getElementById('weather-summary').textContent = "Location Needed";
+            updateScheduleUI(); // Ensure schedule is visible even without location
+        }
+    </script>
+</body>
+
+</html>
