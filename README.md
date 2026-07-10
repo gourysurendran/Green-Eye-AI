@@ -191,3 +191,5 @@ Green Eye aims to bridge the gap between modern Artificial Intelligence and trad
 ## 📜 License
 
 This project is intended for academic and educational purposes.
+
+Thank you for visiting this project <3
