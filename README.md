@@ -8,10 +8,10 @@ Green Eye is an intelligent agricultural assistance platform that leverages Arti
 
 ## 👨‍💻 Authors
 
-- Goury S
-- Anjana V
-- Nythal A
-- Roobini R
+* Goury S
+* Anjana V
+* Nythal A
+* Roobini R
 
 ---
 
@@ -28,106 +28,126 @@ The goal is to improve productivity, reduce crop losses, and support sustainable
 # ✨ Features
 
 ## 🌿 AI Plant Disease Detection
-- Upload a leaf image
-- CNN-based disease prediction
-- Confidence score
-- Disease description
-- Recommended treatments
-- Preventive measures
+
+* Upload a leaf image
+* CNN-based disease prediction
+* Confidence score
+* Disease description
+* Recommended treatments
+* Preventive measures
 
 ---
 
 ## 🌱 Crop Recommendation
+
 Suggests the most suitable crops based on:
-- Soil type
-- Soil nutrients (NPK)
-- Temperature
-- Humidity
-- Rainfall
-- pH value
+
+* Soil type
+* Soil nutrients (NPK)
+* Temperature
+* Humidity
+* Rainfall
+* pH value
 
 ---
 
 ## 💧 Smart Irrigation Guidance
+
 Provides irrigation recommendations using:
-- Crop type
-- Soil moisture
-- Weather conditions
-- Growth stage
+
+* Crop type
+* Soil moisture
+* Weather conditions
+* Growth stage
 
 ---
 
 ## 🧪 Fertilizer Recommendation
+
 Recommends suitable fertilizers based on:
-- Soil nutrient levels
-- Crop requirements
-- Deficiency analysis
+
+* Soil nutrient levels
+* Crop requirements
+* Deficiency analysis
 
 ---
 
 ## 📊 Market Price Insights
+
 Provides:
-- Crop market prices
-- Price trends
-- Best-selling opportunities
+
+* Crop market prices
+* Price trends
+* Best-selling opportunities
 
 ---
 
 ## 💰 Government Scheme Guidance
+
 Helps farmers discover:
-- Subsidies
-- Loan schemes
-- Insurance programs
-- Agricultural support initiatives
+
+* Subsidies
+* Loan schemes
+* Insurance programs
+* Agricultural support initiatives
 
 ---
 
 ## 🤖 AI Farmer Assistant
+
 Interactive chatbot capable of answering questions related to:
-- Farming practices
-- Plant diseases
-- Fertilizers
-- Irrigation
-- Crop management
+
+* Farming practices
+* Plant diseases
+* Fertilizers
+* Irrigation
+* Crop management
 
 ---
 
 ## 📅 Crop Calendar
+
 Provides reminders for:
-- Sowing
-- Fertilizer application
-- Irrigation
-- Harvesting
-- Seasonal farming activities
+
+* Sowing
+* Fertilizer application
+* Irrigation
+* Harvesting
+* Seasonal farming activities
 
 ---
 
 # 🧠 Technologies Used
 
 ### Programming Languages
-- Python
-- JavaScript
-- HTML5
-- CSS3
+
+* Python
+* JavaScript
+* HTML5
+* CSS3
 
 ### AI & Machine Learning
-- TensorFlow
-- Keras
-- CNN (Convolutional Neural Network)
+
+* TensorFlow
+* Keras
+* CNN (Convolutional Neural Network)
 
 ### Libraries
-- NumPy
-- Pandas
-- OpenCV
-- Scikit-learn
+
+* NumPy
+* Pandas
+* OpenCV
+* Scikit-learn
 
 ### Backend
-- Flask
+
+* Flask
 
 ### Frontend
-- HTML
-- CSS
-- JavaScript
+
+* HTML
+* CSS
+* JavaScript
 
 ---
 
@@ -137,24 +157,26 @@ Provides reminders for:
 2. The CNN model processes the image.
 3. The system predicts the plant disease.
 4. Green Eye generates:
-   - Disease name
-   - Confidence score
-   - Symptoms
-   - Recommended treatment
-   - Preventive measures
+
+   * Disease name
+   * Confidence score
+   * Symptoms
+   * Recommended treatment
+   * Preventive measures
 5. Farmers can also access:
-   - Crop recommendations
-   - Fertilizer guidance
-   - Irrigation advice
-   - Market prices
-   - Government schemes
-   - AI chatbot assistance
+
+   * Crop recommendations
+   * Fertilizer guidance
+   * Irrigation advice
+   * Market prices
+   * Government schemes
+   * AI chatbot assistance
 
 ---
 
 # 📂 Project Structure
 
-```
+```text
 GreenEye/
 │
 ├── static/
@@ -171,14 +193,14 @@ GreenEye/
 
 # 🎯 Future Enhancements
 
-- 📱 Android and iOS application
-- 🌦️ Live weather forecasting integration
-- 📡 IoT sensor support
-- 🚁 Drone-based crop monitoring
-- 📈 Advanced crop yield prediction
-- 🛰️ Satellite imagery analysis
-- 🌍 Multi-language voice assistant
-- 🔔 SMS notification service
+* 📱 Android and iOS application
+* 🌦️ Live weather forecasting integration
+* 📡 IoT sensor support
+* 🚁 Drone-based crop monitoring
+* 📈 Advanced crop yield prediction
+* 🛰️ Satellite imagery analysis
+* 🌍 Multi-language voice assistant
+* 🔔 SMS notification service
 
 ---
 
@@ -192,4 +214,6 @@ Green Eye aims to bridge the gap between modern Artificial Intelligence and trad
 
 This project is intended for academic and educational purposes.
 
-Thank you for visiting this project <3
+---
+
+⭐ **Thank you for visiting this project! If you find Green Eye useful, consider giving it a ⭐ on GitHub.**
